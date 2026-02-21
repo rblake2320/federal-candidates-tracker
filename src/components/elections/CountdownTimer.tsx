@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   differenceInDays,
   differenceInHours,
@@ -53,14 +53,15 @@ function TimeBox({ value, label }: { value: number; label: string }) {
 }
 
 function CountdownTimerInner({ targetDate, compact, className }: CountdownTimerProps) {
-  // Parse date upfront (may be null/invalid — hooks still run unconditionally)
-  const parsed = targetDate ? parseISO(targetDate) : null;
-  const validDate = parsed && isValid(parsed) ? parsed : null;
-
-  // Set target to end of election day (23:59:59) so countdown covers the full day
-  const target = validDate
-    ? new Date(validDate.getFullYear(), validDate.getMonth(), validDate.getDate(), 23, 59, 59)
-    : null;
+  // Parse date upfront — memoize so the Date reference stays stable across renders
+  const { target, validDate } = useMemo(() => {
+    const parsed = targetDate ? parseISO(targetDate) : null;
+    const vd = parsed && isValid(parsed) ? parsed : null;
+    const t = vd
+      ? new Date(vd.getFullYear(), vd.getMonth(), vd.getDate(), 23, 59, 59)
+      : null;
+    return { target: t, validDate: vd };
+  }, [targetDate]);
 
   const [time, setTime] = useState<TimeRemaining>(() =>
     target ? computeTimeRemaining(target) : { days: 0, hours: 0, minutes: 0, seconds: 0 }
