@@ -48,10 +48,10 @@ async function seed() {
     for (let d = 1; d <= state.house_seats; d++) {
       const district = String(d).padStart(2, '0');
       await client.query(
-        `INSERT INTO elections (state, office, district, election_type, election_date, status)
-         VALUES ($1, 'house', $2, 'general', '2026-11-03', 'upcoming')
+        `INSERT INTO elections (state, office, district, election_type, election_date)
+         VALUES ($1, 'house', $2, 'regular', '2026-11-03')
          ON CONFLICT DO NOTHING`,
-        [state.code, district]
+        [state.code, parseInt(district)]
       );
       houseCount++;
     }

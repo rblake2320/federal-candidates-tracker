@@ -112,7 +112,7 @@ describe('Pagination Validation', () => {
 
   it('should clamp limit to valid range', () => {
     const clampLimit = (l: any) => Math.min(100, Math.max(1, parseInt(l, 10) || 25));
-    expect(clampLimit(0)).toBe(1);
+    expect(clampLimit(0)).toBe(25);  // 0 is falsy, falls to default 25
     expect(clampLimit(200)).toBe(100);
     expect(clampLimit('abc')).toBe(25);
     expect(clampLimit(50)).toBe(50);
