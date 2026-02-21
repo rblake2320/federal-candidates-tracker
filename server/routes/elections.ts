@@ -5,6 +5,8 @@ import { logger } from '../services/logger.js';
 export const electionsRouter = Router();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const VALID_OFFICE = new Set(['senate', 'house']);
+const VALID_ELECTION_TYPE = new Set(['regular', 'special']);
 
 // ── GET /api/v1/elections ─────────────────────────────────
 electionsRouter.get('/', async (req: Request, res: Response) => {
@@ -38,11 +40,17 @@ electionsRouter.get('/', async (req: Request, res: Response) => {
     }
 
     if (office) {
+      if (!VALID_OFFICE.has(office as string)) {
+        return res.status(400).json({ error: `Invalid office value. Allowed: ${[...VALID_OFFICE].join(', ')}` });
+      }
       conditions.push(`e.office = $${paramIdx++}::office_type`);
       params.push(office);
     }
 
     if (election_type) {
+      if (!VALID_ELECTION_TYPE.has(election_type as string)) {
+        return res.status(400).json({ error: `Invalid election_type value. Allowed: ${[...VALID_ELECTION_TYPE].join(', ')}` });
+      }
       conditions.push(`e.election_type = $${paramIdx++}::election_type`);
       params.push(election_type);
     }
