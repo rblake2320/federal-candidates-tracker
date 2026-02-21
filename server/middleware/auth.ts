@@ -2,7 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../services/logger.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+const KNOWN_DEFAULTS = new Set(['change-me-in-production', 'replace-me-in-production']);
+const envSecret = process.env.JWT_SECRET;
+if (!envSecret || KNOWN_DEFAULTS.has(envSecret)) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FATAL: JWT_SECRET must be set to a strong random value in production');
+  }
+  logger.warn('JWT_SECRET not set or using a known default — auth tokens are insecure');
+}
+const JWT_SECRET: string = envSecret || 'dev-only-insecure-fallback';
 
 export interface AuthPayload {
   userId: string;
