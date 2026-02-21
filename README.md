@@ -93,20 +93,19 @@ Automated collection runs every 6 hours via GitHub Actions (`data-collection.yml
 
 ## API Endpoints
 
-| Method | Path                          | Description               |
-|--------|-------------------------------|---------------------------|
-| GET    | `/health`                     | Health check              |
-| GET    | `/api/stats`                  | Aggregate statistics      |
-| GET    | `/api/states`                 | All state summaries       |
-| GET    | `/api/states/:code`           | State detail + elections  |
-| GET    | `/api/candidates`             | Paginated candidates      |
-| GET    | `/api/candidates/search`      | Full-text search          |
-| GET    | `/api/candidates/state/:state`| Filter by state           |
-| GET    | `/api/candidates/:id`         | Candidate detail          |
-| GET    | `/api/elections`              | All elections             |
-| GET    | `/api/elections/special`      | Special elections only    |
-| GET    | `/api/elections/:id`          | Election detail           |
-| GET    | `/api/export`                 | Bulk export (auth required)|
+| Method | Path                               | Description               |
+|--------|------------------------------------|---------------------------|
+| GET    | `/health`                          | Health check              |
+| GET    | `/api/v1/stats`                    | Aggregate statistics      |
+| GET    | `/api/v1/states`                   | All state summaries       |
+| GET    | `/api/v1/states/:code`             | State detail + elections  |
+| GET    | `/api/v1/candidates`               | Paginated candidates + search (`?search=`) |
+| GET    | `/api/v1/candidates/state/:state`  | Filter by state           |
+| GET    | `/api/v1/candidates/:id`           | Candidate detail          |
+| GET    | `/api/v1/elections`                | All elections             |
+| GET    | `/api/v1/elections/special`        | Special elections only    |
+| GET    | `/api/v1/elections/:id`            | Election detail           |
+| GET    | `/api/v1/data/export`              | Bulk CSV export (auth required) |
 
 ## Project Structure
 
