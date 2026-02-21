@@ -53,46 +53,48 @@ function TimeBox({ value, label }: { value: number; label: string }) {
 }
 
 function CountdownTimerInner({ targetDate, compact, className }: CountdownTimerProps) {
-  // Handle null/undefined/empty date
-  if (!targetDate) {
-    return (
-      <div className={cn('flex items-center justify-center rounded-lg bg-slate-800/50 px-4 py-3', className)}>
-        <span className="text-sm text-slate-500">Date TBD</span>
-      </div>
-    );
-  }
-
-  // Parse and validate date
-  const parsed = parseISO(targetDate);
-  if (!isValid(parsed)) {
-    return (
-      <div className={cn('flex items-center justify-center rounded-lg bg-slate-800/50 px-4 py-3', className)}>
-        <span className="text-sm text-slate-500">Date TBD</span>
-      </div>
-    );
-  }
+  // Parse date upfront (may be null/invalid — hooks still run unconditionally)
+  const parsed = targetDate ? parseISO(targetDate) : null;
+  const validDate = parsed && isValid(parsed) ? parsed : null;
 
   // Set target to end of election day (23:59:59) so countdown covers the full day
-  const target = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 23, 59, 59);
+  const target = validDate
+    ? new Date(validDate.getFullYear(), validDate.getMonth(), validDate.getDate(), 23, 59, 59)
+    : null;
 
-  const [time, setTime] = useState<TimeRemaining>(() => computeTimeRemaining(target));
-  const [isPast, setIsPast] = useState(() => differenceInSeconds(target, new Date()) <= 0);
-  const [isToday, setIsToday] = useState(() => isSameDay(new Date(), parsed));
+  const [time, setTime] = useState<TimeRemaining>(() =>
+    target ? computeTimeRemaining(target) : { days: 0, hours: 0, minutes: 0, seconds: 0 }
+  );
+  const [isPast, setIsPast] = useState(() =>
+    target ? differenceInSeconds(target, new Date()) <= 0 : false
+  );
+  const [isToday, setIsToday] = useState(() =>
+    validDate ? isSameDay(new Date(), validDate) : false
+  );
 
   const tick = useCallback(() => {
+    if (!target || !validDate) return;
     const now = new Date();
-    const remaining = computeTimeRemaining(target);
-    setTime(remaining);
+    setTime(computeTimeRemaining(target));
     setIsPast(differenceInSeconds(target, now) <= 0);
-    setIsToday(isSameDay(now, parsed));
-  }, [target, parsed]);
+    setIsToday(isSameDay(now, validDate));
+  }, [target, validDate]);
 
   useEffect(() => {
-    // Tick immediately on mount
+    if (!target) return;
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [tick]);
+  }, [tick, target]);
+
+  // No valid date — show TBD
+  if (!target) {
+    return (
+      <div className={cn('flex items-center justify-center rounded-lg bg-slate-800/50 px-4 py-3', className)}>
+        <span className="text-sm text-slate-500">Date TBD</span>
+      </div>
+    );
+  }
 
   // Election day today
   if (isToday && !isPast) {

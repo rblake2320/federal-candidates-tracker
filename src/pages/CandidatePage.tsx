@@ -90,7 +90,7 @@ export function CandidatePage() {
           className="inline-flex items-center gap-1 hover:text-slate-300 transition-colors"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Home
+          Elections
         </Link>
         <span>/</span>
         <Link
@@ -490,7 +490,7 @@ function ErrorState() {
             className="mt-4 inline-flex items-center gap-1.5 text-sm text-blue-400 hover:text-blue-300 transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to dashboard
+            Back to Elections
           </Link>
         </CardContent>
       </Card>

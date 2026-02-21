@@ -7,7 +7,6 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
-  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -39,8 +38,7 @@ const NAV_GROUPS: NavGroupDef[] = [
 ];
 
 const QUICK_ACCESS: NavItemDef[] = [
-  { label: '2026 Midterms', to: '/search?q=2026', icon: Zap },
-  { label: 'Browse by State', to: '/search?q=', icon: MapPin },
+  { label: 'Find Candidates', to: '/search', icon: Zap },
 ];
 
 // ── Storage helpers ────────────────────────────────────────

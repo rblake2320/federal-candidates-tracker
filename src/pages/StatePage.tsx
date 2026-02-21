@@ -282,7 +282,7 @@ function ErrorState() {
         <Link to="/">
           <Button variant="ghost" size="sm" className="gap-1.5">
             <ArrowLeft className="h-4 w-4" />
-            Back to dashboard
+            Back to Elections
           </Button>
         </Link>
       </CardContent>

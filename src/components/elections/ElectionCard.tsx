@@ -3,15 +3,12 @@ import { Link } from 'react-router-dom';
 import {
   Calendar,
   MapPin,
-  Heart,
-  TrendingUp,
-  ArrowLeftRight,
   Info,
 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { CountdownTimer } from './CountdownTimer';
 import { CandidatePreview } from './CandidatePreview';
 import type { Election, Candidate } from '@/types/models';
@@ -123,7 +120,7 @@ export function ElectionCard({
   const subtitle = buildSubtitle(election);
   const dateFormatted = formatElectionDate(election.election_date);
   const stateName = election.state_name ?? election.state;
-  const stateCode = election.state.toLowerCase();
+  const stateCode = election.state;
   const competitive = getCompetitiveLabel(election.cook_rating);
   const totalCandidates =
     election.total_candidates ?? election.candidate_count ?? 0;
@@ -199,27 +196,17 @@ export function ElectionCard({
         )}
 
         {/* Action row */}
-        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-800 pt-4">
-          <Button variant="ghost" size="sm" className="gap-1.5">
-            <Heart className="h-3.5 w-3.5" />
-            Watch
-          </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5">
-            <TrendingUp className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">View Trends</span>
-            <span className="sm:hidden">Trends</span>
-          </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5">
-            <ArrowLeftRight className="h-3.5 w-3.5" />
-            Compare
-          </Button>
+        <div className="mt-5 flex items-center border-t border-slate-800 pt-4">
+          <span className="text-xs text-slate-500">
+            {totalCandidates} candidate{totalCandidates !== 1 ? 's' : ''}
+          </span>
           <div className="flex-1" />
           <Link
             to={`/state/${stateCode}`}
             className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'gap-1.5')}
           >
             <Info className="h-3.5 w-3.5" />
-            Details
+            View Details
           </Link>
         </div>
       </div>

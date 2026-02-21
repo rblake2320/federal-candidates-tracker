@@ -23,7 +23,7 @@ function NotFound() {
       <h2 className="text-2xl font-bold text-white">404 — Not Found</h2>
       <p className="mt-2 text-slate-400">That page doesn't exist.</p>
       <Link to="/" className="mt-4 inline-block text-sm text-blue-400 hover:text-blue-300">
-        ← Back to dashboard
+        ← Back to Elections
       </Link>
     </div>
   );

@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import {
   MapPin,
   Filter,
+  SlidersHorizontal,
   Building2,
   Calendar,
   BarChart3,
   RefreshCw,
-  X,
 } from 'lucide-react';
 import { getStates } from '@/lib/api';
 import { Select } from '@/components/ui/select';
@@ -28,9 +28,7 @@ interface FilterPanelProps {
 // ── Constants ────────────────────────────────────────────────
 
 const ELECTION_TYPE_OPTIONS = [
-  { value: 'general', label: 'General Elections' },
-  { value: 'primary', label: 'Primary Elections' },
-  { value: 'runoff', label: 'Runoff Elections' },
+  { value: 'regular', label: 'Regular Elections' },
   { value: 'special', label: 'Special Elections' },
 ] as const;
 
@@ -110,7 +108,7 @@ export function FilterPanel({
       {/* ── Filters Header ─────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <X className="h-4 w-4 text-slate-400" />
+          <SlidersHorizontal className="h-4 w-4 text-slate-400" />
           <span className="text-sm font-medium text-slate-200">Filters</span>
         </div>
         <button
