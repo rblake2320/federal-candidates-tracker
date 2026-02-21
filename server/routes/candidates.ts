@@ -7,6 +7,18 @@ export const candidatesRouter = Router();
 // UUID v4 validation regex
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// ── Enum allowlists ─────────────────────────────────────────
+const VALID_PARTY = new Set([
+  'democratic', 'republican', 'libertarian', 'green',
+  'constitution', 'independent', 'no_party', 'other',
+]);
+const VALID_OFFICE = new Set(['senate', 'house']);
+const VALID_STATUS = new Set([
+  'declared', 'exploratory', 'filed', 'qualified',
+  'withdrawn', 'won', 'lost', 'runoff',
+]);
+const VALID_ELECTION_TYPE = new Set(['regular', 'special']);
+
 // FIX: Strict allowlist map for sort columns — prevents injection via string concat
 const SORT_COLUMN_MAP: Record<string, string> = {
   state: 'c.state',
@@ -60,11 +72,17 @@ candidatesRouter.get('/', async (req: Request, res: Response) => {
 
     if (party) {
       const parties = (party as string).split(',').map(p => p.trim().toLowerCase());
+      if (parties.some(p => !VALID_PARTY.has(p))) {
+        return res.status(400).json({ error: `Invalid party value. Allowed: ${[...VALID_PARTY].join(', ')}` });
+      }
       conditions.push(`c.party = ANY($${paramIdx++}::party_affiliation[])`);
       params.push(parties);
     }
 
     if (office) {
+      if (!VALID_OFFICE.has(office as string)) {
+        return res.status(400).json({ error: `Invalid office value. Allowed: ${[...VALID_OFFICE].join(', ')}` });
+      }
       conditions.push(`c.office = $${paramIdx++}::office_type`);
       params.push(office);
     }
@@ -79,6 +97,9 @@ candidatesRouter.get('/', async (req: Request, res: Response) => {
     }
 
     if (status) {
+      if (!VALID_STATUS.has(status as string)) {
+        return res.status(400).json({ error: `Invalid status value. Allowed: ${[...VALID_STATUS].join(', ')}` });
+      }
       conditions.push(`c.status = $${paramIdx++}::candidate_status`);
       params.push(status);
     }
@@ -89,6 +110,9 @@ candidatesRouter.get('/', async (req: Request, res: Response) => {
     }
 
     if (election_type) {
+      if (!VALID_ELECTION_TYPE.has(election_type as string)) {
+        return res.status(400).json({ error: `Invalid election_type value. Allowed: ${[...VALID_ELECTION_TYPE].join(', ')}` });
+      }
       conditions.push(`c.election_type = $${paramIdx++}::election_type`);
       params.push(election_type);
     }

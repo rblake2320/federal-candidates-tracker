@@ -176,7 +176,9 @@ function FinanceStat({ label, value }: { label: string; value?: number | null })
   const formatted = value
     ? value >= 1_000_000
       ? `$${(value / 1_000_000).toFixed(1)}M`
-      : `$${(value / 1_000).toFixed(0)}K`
+      : value >= 1_000
+        ? `$${(value / 1_000).toFixed(0)}K`
+        : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value)
     : '—';
 
   return (

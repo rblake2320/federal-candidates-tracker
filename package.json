@@ -29,6 +29,7 @@
     "@tanstack/react-query": "^5.62.0",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
     "express": "^4.21.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
@@ -36,9 +37,11 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.28.0",
-    "recharts": "^2.14.1"
+    "recharts": "^2.14.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.15.0",
     "@playwright/test": "^1.49.0",
     "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
@@ -48,12 +51,12 @@
     "@types/pg": "^8.11.10",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
-    "concurrently": "^9.1.0",
-    "@eslint/js": "^9.15.0",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.8",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
     "eslint": "^9.15.0",
     "postcss": "^8.4.49",
     "prettier": "^3.4.2",
@@ -61,8 +64,7 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
-    "vitest": "^2.1.8",
-    "@vitest/coverage-v8": "^2.1.8"
+    "vitest": "^2.1.8"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -5,6 +5,18 @@ import { requireAuth } from '../middleware/auth.js';
 
 export const exportRouter = Router();
 
+// CSV injection prevention: prefix dangerous leading characters with a single quote
+// so Excel/LibreOffice won't interpret cells as formulas.
+const CSV_INJECTION_RE = /^[=+\-@\t\r]/;
+function sanitizeCsvValue(val: unknown): string {
+  if (val === null || val === undefined) return '';
+  const str = String(val);
+  if (CSV_INJECTION_RE.test(str)) {
+    return "'" + str;
+  }
+  return str;
+}
+
 // All export endpoints require authentication
 exportRouter.use(requireAuth);
 
@@ -66,9 +78,8 @@ exportRouter.get('/', async (req: Request, res: Response) => {
         headers.join(','),
         ...rows.map(row =>
           headers.map(h => {
-            const val = (row as Record<string, unknown>)[h];
-            if (val === null || val === undefined) return '';
-            const str = String(val);
+            const raw = (row as Record<string, unknown>)[h];
+            const str = sanitizeCsvValue(raw);
             // Escape CSV values containing commas, quotes, or newlines
             if (str.includes(',') || str.includes('"') || str.includes('\n')) {
               return `"${str.replace(/"/g, '""')}"` ;

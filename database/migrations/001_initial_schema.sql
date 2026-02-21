@@ -53,7 +53,7 @@ CREATE TABLE elections (
   updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
   CONSTRAINT chk_house_district CHECK (
-    (office = 'house' AND district IS NOT NULL AND district > 0)
+    (office = 'house' AND district IS NOT NULL AND district >= 0)
     OR
     (office = 'senate' AND district IS NULL)
   ),

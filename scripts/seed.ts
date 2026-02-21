@@ -18,6 +18,7 @@ const SEEDS_DIR = join(import.meta.dirname, '..', 'database', 'seeds');
 const SEED_FILES = [
   'states.sql',
   '2026_elections.sql',
+  'senate_classes.sql',  // Class III special elections (if any)
 ];
 
 async function seed() {
@@ -57,6 +58,37 @@ async function seed() {
     }
   }
   console.log(`  ✅ ${houseCount} House elections generated`);
+
+  // Verify senate_class assignments
+  console.log('  🔍 Verifying senate_class assignments...');
+  const senateCheck = await client.query(
+    `SELECT senate_class, election_type, COUNT(*) as cnt
+     FROM elections WHERE office = 'senate'
+     GROUP BY senate_class, election_type
+     ORDER BY senate_class`
+  );
+  for (const row of senateCheck.rows) {
+    console.log(`     Class ${row.senate_class} (${row.election_type}): ${row.cnt} seats`);
+  }
+
+  // Sanity check: Class II regular should be exactly 33 for 2026
+  const classII = senateCheck.rows.find(
+    (r: { senate_class: number; election_type: string }) =>
+      r.senate_class === 2 && r.election_type === 'regular'
+  );
+  if (!classII || parseInt(classII.cnt) !== 33) {
+    console.warn(`  ⚠️  WARNING: Expected 33 Class II regular seats, found ${classII?.cnt ?? 0}`);
+  } else {
+    console.log('  ✅ Senate class verification passed (33 Class II seats)');
+  }
+
+  // Sanity check: House elections should have NULL senate_class
+  const badHouse = await client.query(
+    `SELECT COUNT(*) as cnt FROM elections WHERE office = 'house' AND senate_class IS NOT NULL`
+  );
+  if (parseInt(badHouse.rows[0].cnt) > 0) {
+    console.warn(`  ⚠️  WARNING: ${badHouse.rows[0].cnt} House elections have non-NULL senate_class`);
+  }
 
   console.log('\n🏁 Seeding complete.');
   await client.end();

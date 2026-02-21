@@ -1,11 +1,14 @@
--- ── Seed: Senate Classes (Class II up in 2026) ───────────
--- Class II senators face election in November 2026.
--- This maps state → senate class for the seat that's up.
-
--- Class II states (33 seats up in 2026):
+-- ── Seed: Senate Class III Special Elections (2026) ────────
+-- Class II (33 seats) are the regular cycle for 2026 — see 2026_elections.sql.
+-- Class III special elections occur when a Class III senator vacates mid-term
+-- (death, resignation, appointment, etc.). Add them here as they arise.
+--
+-- Class II states (regular 2026 cycle):
 -- AL, AK, AR, CO, DE, GA, ID, IL, IA, KS, KY, LA, ME, MA,
 -- MI, MN, MS, MT, NE, NH, NJ, NM, NC, OK, OR, RI, SC, SD,
 -- TN, TX, VA, WV, WY
-
--- We store this as elections rather than a separate table.
--- See 2026_elections.sql for the actual election records.
+--
+-- Class III special election template (uncomment and fill as needed):
+-- INSERT INTO elections (state, office, district, senate_class, election_type, election_date)
+-- VALUES ('XX', 'senate', NULL, 3, 'special', '2026-11-03')
+-- ON CONFLICT DO NOTHING;

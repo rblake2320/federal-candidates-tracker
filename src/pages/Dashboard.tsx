@@ -1,25 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { getStats, getStates } from '../lib/api';
-
-// ── Types ──────────────────────────────────────────────────
-
-interface Stats {
-  total_candidates: number;
-  total_senate_races: number;
-  total_house_races: number;
-  total_special_elections: number;
-  candidates_by_party: Record<string, number>;
-  avg_data_confidence: number;
-}
-
-interface StateSummary {
-  state: string;
-  state_name: string;
-  total_candidates: number;
-  senate_races: number;
-  house_races: number;
-}
+import type { Stats, StateSummary } from '../types/models';
 
 interface StatesResponse {
   data: StateSummary[];
@@ -141,6 +123,48 @@ export function Dashboard() {
         </div>
       )}
 
+      {/* Top Fundraisers */}
+      {stats?.top_fundraisers && stats.top_fundraisers.length > 0 && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Top Fundraisers</h3>
+          <div className="space-y-3">
+            {stats.top_fundraisers.map((f, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 text-slate-600 text-right tabular-nums">{i + 1}.</span>
+                  <span className="text-white font-medium">{f.full_name}</span>
+                  <span className="text-slate-500">{f.state} &middot; {f.office} &middot; {PARTY_LABELS[f.party] || f.party}</span>
+                </div>
+                <span className="text-emerald-400 font-medium tabular-nums">
+                  {formatDollars(f.total_raised)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Data Collections */}
+      {stats?.recent_collections && stats.recent_collections.length > 0 && (
+        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Recent Data Collections</h3>
+          <div className="space-y-2">
+            {stats.recent_collections.map((c, i) => (
+              <div key={i} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${c.status === 'completed' ? 'bg-emerald-500' : c.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />
+                  <span className="text-slate-300">{c.source}</span>
+                </div>
+                <div className="flex items-center gap-4 text-slate-500">
+                  <span className="tabular-nums">{c.records_found.toLocaleString()} records</span>
+                  <span className="tabular-nums">{new Date(c.completed_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* State Grid */}
       <div>
         <h3 className="text-lg font-semibold text-white mb-4">Browse by State</h3>
@@ -196,6 +220,14 @@ export function Dashboard() {
       )}
     </div>
   );
+}
+
+// ── Helpers ─────────────────────────────────────────────────
+
+function formatDollars(value: number): string {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 }
 
 // ── Sub-components ─────────────────────────────────────────

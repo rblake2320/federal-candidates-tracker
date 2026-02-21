@@ -17,6 +17,12 @@ const PARTY_LABELS: Record<string, string> = {
   no_party: 'NP', other: 'O',
 };
 
+function formatDollars(value: number): string {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+}
+
 export function StatePage() {
   const { code } = useParams<{ code: string }>();
 
@@ -141,9 +147,9 @@ function RaceCard({
                   )}
                 </div>
               </div>
-              {c.total_raised && (
+              {c.total_raised != null && c.total_raised > 0 && (
                 <span className="text-xs text-slate-500 tabular-nums">
-                  ${(c.total_raised / 1000000).toFixed(1)}M raised
+                  {formatDollars(c.total_raised)} raised
                 </span>
               )}
             </Link>
