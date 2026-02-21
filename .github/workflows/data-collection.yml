@@ -1,0 +1,54 @@
+name: Data Collection
+
+on:
+  schedule:
+    # FEC data: every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      collector:
+        description: 'Which collector to run'
+        required: true
+        default: 'fec'
+        type: choice
+        options:
+          - fec
+          - ballotpedia
+          - all
+
+jobs:
+  collect-fec:
+    if: >
+      github.event_name == 'schedule' ||
+      github.event.inputs.collector == 'fec' ||
+      github.event.inputs.collector == 'all'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      FEC_API_KEY: ${{ secrets.FEC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/collect-fec.ts
+        timeout-minutes: 30
+
+  collect-ballotpedia:
+    if: >
+      github.event.inputs.collector == 'ballotpedia' ||
+      github.event.inputs.collector == 'all'
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx tsx scripts/collect-ballotpedia.ts
+        timeout-minutes: 60
