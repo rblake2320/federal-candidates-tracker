@@ -7,7 +7,7 @@ export const exportRouter = Router();
 
 // CSV injection prevention: prefix dangerous leading characters with a single quote
 // so Excel/LibreOffice won't interpret cells as formulas.
-const CSV_INJECTION_RE = /^[=+\-@\t\r]/;
+const CSV_INJECTION_RE = /^[=+\-@\t\r|]/;
 function sanitizeCsvValue(val: unknown): string {
   if (val === null || val === undefined) return '';
   const str = String(val);
