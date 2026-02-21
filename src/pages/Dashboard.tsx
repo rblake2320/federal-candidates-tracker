@@ -1,5 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { Users, Building2, Home, Zap, TrendingUp, Database, MapPin, BarChart3, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import { getStats, getStates } from '../lib/api';
 import type { Stats, StateSummary } from '../types/models';
 
@@ -29,6 +34,17 @@ const PARTY_LABELS: Record<string, string> = {
   constitution: 'Constitution',
   no_party: 'No Party',
   other: 'Other',
+};
+
+const PARTY_BADGE_VARIANT: Record<string, 'democratic' | 'republican' | 'libertarian' | 'green' | 'independent' | 'other'> = {
+  democratic: 'democratic',
+  republican: 'republican',
+  libertarian: 'libertarian',
+  green: 'green',
+  independent: 'independent',
+  constitution: 'other',
+  no_party: 'other',
+  other: 'other',
 };
 
 // ── Dashboard ──────────────────────────────────────────────
@@ -71,109 +87,170 @@ export function Dashboard() {
           value={stats?.total_candidates ?? '—'}
           loading={statsLoading}
           error={statsError}
+          icon={Users}
+          iconColor="text-blue-400"
         />
         <StatCard
           label="Senate Races"
           value={stats?.total_senate_races ?? '—'}
           loading={statsLoading}
           error={statsError}
+          icon={Building2}
+          iconColor="text-violet-400"
         />
         <StatCard
           label="House Races"
           value={stats?.total_house_races ?? '—'}
           loading={statsLoading}
           error={statsError}
+          icon={Home}
+          iconColor="text-emerald-400"
         />
         <StatCard
           label="Special Elections"
           value={stats?.total_special_elections ?? '—'}
           loading={statsLoading}
           error={statsError}
+          icon={Zap}
+          iconColor="text-amber-400"
         />
       </div>
 
       {/* Party Breakdown */}
       {stats?.candidates_by_party && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Candidates by Party</h3>
-          <div className="space-y-3">
-            {Object.entries(stats.candidates_by_party)
-              .sort(([, a], [, b]) => b - a)
-              .map(([party, count]) => {
-                const total = stats.total_candidates || 1;
-                const pct = (count / total) * 100;
-                return (
-                  <div key={party} className="flex items-center gap-3">
-                    <span className="w-24 text-sm text-slate-400 text-right">
-                      {PARTY_LABELS[party] || party}
-                    </span>
-                    <div className="flex-1 h-6 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${PARTY_COLORS[party] || 'bg-slate-500'}`}
-                        style={{ width: `${Math.max(pct, 1)}%` }}
-                      />
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-400" />
+              <CardTitle>Candidates by Party</CardTitle>
+            </div>
+            <CardDescription>
+              Distribution of {stats.total_candidates.toLocaleString()} declared candidates across party affiliations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(stats.candidates_by_party)
+                .sort(([, a], [, b]) => b - a)
+                .map(([party, count]) => {
+                  const total = stats.total_candidates || 1;
+                  const pct = (count / total) * 100;
+                  return (
+                    <div key={party} className="flex items-center gap-3">
+                      <div className="w-28 flex justify-end">
+                        <Badge variant={PARTY_BADGE_VARIANT[party] || 'other'}>
+                          {PARTY_LABELS[party] || party}
+                        </Badge>
+                      </div>
+                      <div className="flex-1 h-6 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className={cn(
+                            'h-full rounded-full transition-all duration-500',
+                            PARTY_COLORS[party] || 'bg-slate-500'
+                          )}
+                          style={{ width: `${Math.max(pct, 1)}%` }}
+                        />
+                      </div>
+                      <span className="w-20 text-sm text-slate-300 text-right tabular-nums">
+                        {count.toLocaleString()} ({pct.toFixed(1)}%)
+                      </span>
                     </div>
-                    <span className="w-20 text-sm text-slate-300 text-right tabular-nums">
-                      {count.toLocaleString()} ({pct.toFixed(1)}%)
-                    </span>
-                  </div>
-                );
-              })}
-          </div>
-        </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Top Fundraisers */}
       {stats?.top_fundraisers && stats.top_fundraisers.length > 0 && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Top Fundraisers</h3>
-          <div className="space-y-3">
-            {stats.top_fundraisers.map((f, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-3">
-                  <span className="w-6 text-slate-600 text-right tabular-nums">{i + 1}.</span>
-                  <span className="text-white font-medium">{f.full_name}</span>
-                  <span className="text-slate-500">{f.state} &middot; {f.office} &middot; {PARTY_LABELS[f.party] || f.party}</span>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-emerald-400" />
+              <CardTitle>Top Fundraisers</CardTitle>
+            </div>
+            <CardDescription>
+              Leading candidates by total funds raised
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats.top_fundraisers.map((f, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 text-slate-600 text-right tabular-nums">{i + 1}.</span>
+                    <span className="text-white font-medium">{f.full_name}</span>
+                    <span className="text-slate-500 hidden sm:inline">{f.state} &middot; {f.office}</span>
+                    <Badge variant={PARTY_BADGE_VARIANT[f.party] || 'other'} className="hidden sm:inline-flex">
+                      {PARTY_LABELS[f.party] || f.party}
+                    </Badge>
+                  </div>
+                  <span className="text-emerald-400 font-medium tabular-nums">
+                    {formatDollars(f.total_raised)}
+                  </span>
                 </div>
-                <span className="text-emerald-400 font-medium tabular-nums">
-                  {formatDollars(f.total_raised)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Recent Data Collections */}
       {stats?.recent_collections && stats.recent_collections.length > 0 && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Data Collections</h3>
-          <div className="space-y-2">
-            {stats.recent_collections.map((c, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${c.status === 'completed' ? 'bg-emerald-500' : c.status === 'failed' ? 'bg-red-500' : 'bg-amber-500'}`} />
-                  <span className="text-slate-300">{c.source}</span>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-sky-400" />
+              <CardTitle>Recent Data Collections</CardTitle>
+            </div>
+            <CardDescription>
+              Latest data pipeline runs and their status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {stats.recent_collections.map((c, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    {c.status === 'completed' ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    ) : c.status === 'failed' ? (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    ) : (
+                      <Clock className="h-4 w-4 text-amber-500" />
+                    )}
+                    <span className="text-slate-300">{c.source}</span>
+                    <Badge
+                      variant={c.status === 'completed' ? 'default' : c.status === 'failed' ? 'destructive' : 'secondary'}
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {c.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 text-slate-500">
+                    <span className="tabular-nums">{c.records_found.toLocaleString()} records</span>
+                    <span className="tabular-nums">{new Date(c.completed_at).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 text-slate-500">
-                  <span className="tabular-nums">{c.records_found.toLocaleString()} records</span>
-                  <span className="tabular-nums">{new Date(c.completed_at).toLocaleDateString()}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* State Grid */}
       <div>
-        <h3 className="text-lg font-semibold text-white mb-4">Browse by State</h3>
+        <div className="flex items-center gap-2 mb-4">
+          <MapPin className="h-5 w-5 text-blue-400" />
+          <h3 className="text-lg font-semibold text-white">Browse by State</h3>
+        </div>
         {statesError ? (
           <ErrorBanner message="Failed to load states. Please refresh." />
         ) : statesLoading ? (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
             {Array.from({ length: 50 }).map((_, i) => (
-              <div key={i} className="h-20 animate-pulse rounded-lg bg-slate-800/50" />
+              <Skeleton key={i} className="h-20 rounded-lg" />
             ))}
           </div>
         ) : (
@@ -199,24 +276,41 @@ export function Dashboard() {
 
       {/* Data Quality */}
       {stats?.avg_data_confidence !== undefined && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-          <h3 className="text-lg font-semibold text-white mb-2">Data Quality</h3>
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-                style={{ width: `${(stats.avg_data_confidence || 0) * 100}%` }}
-              />
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Database className="h-5 w-5 text-emerald-400" />
+              <CardTitle>Data Quality</CardTitle>
             </div>
-            <span className="text-sm text-slate-300 tabular-nums">
-              {((stats.avg_data_confidence || 0) * 100).toFixed(1)}% confidence
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 mt-2">
-            Data sourced from FEC.gov, Ballotpedia, and state election boards.
-            Updated every 6 hours.
-          </p>
-        </div>
+            <CardDescription>
+              Aggregate confidence score across all sourced records
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 h-3 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all duration-500',
+                    (stats.avg_data_confidence || 0) >= 0.8
+                      ? 'bg-emerald-500'
+                      : (stats.avg_data_confidence || 0) >= 0.5
+                        ? 'bg-amber-500'
+                        : 'bg-red-500'
+                  )}
+                  style={{ width: `${(stats.avg_data_confidence || 0) * 100}%` }}
+                />
+              </div>
+              <span className="text-sm text-slate-300 tabular-nums">
+                {((stats.avg_data_confidence || 0) * 100).toFixed(1)}% confidence
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Data sourced from FEC.gov, Ballotpedia, and state election boards.
+              Updated every 6 hours.
+            </p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
@@ -237,32 +331,51 @@ function StatCard({
   value,
   loading,
   error,
+  icon: Icon,
+  iconColor,
 }: {
   label: string;
   value: number | string;
   loading: boolean;
   error?: boolean;
+  icon: React.ComponentType<{ className?: string }>;
+  iconColor: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-      <div className="text-2xl font-bold text-white">
-        {error ? (
-          <span className="text-red-400 text-base">Error</span>
-        ) : loading ? (
-          <div className="h-8 w-16 animate-pulse rounded bg-slate-800" />
-        ) : (
-          typeof value === 'number' ? value.toLocaleString() : value
-        )}
-      </div>
-      <div className="text-sm text-slate-400 mt-1">{label}</div>
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <div className="text-2xl font-bold text-white">
+              {error ? (
+                <span className="flex items-center gap-1.5 text-red-400 text-base">
+                  <AlertCircle className="h-4 w-4" />
+                  Error
+                </span>
+              ) : loading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                typeof value === 'number' ? value.toLocaleString() : value
+              )}
+            </div>
+            <div className="text-sm text-slate-400">{label}</div>
+          </div>
+          <div className={cn('rounded-md bg-slate-800/80 p-2', iconColor)}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
 function ErrorBanner({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-red-800/50 bg-red-900/20 px-4 py-3 text-sm text-red-300">
-      {message}
-    </div>
+    <Card className="border-red-800/50 bg-red-900/20">
+      <CardContent className="flex items-center gap-3 p-4">
+        <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+        <span className="text-sm text-red-300">{message}</span>
+      </CardContent>
+    </Card>
   );
 }
