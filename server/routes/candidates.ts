@@ -178,7 +178,7 @@ candidatesRouter.get('/', async (req: Request, res: Response) => {
 // ── GET /api/v1/candidates/state/:state ───────────────────
 candidatesRouter.get('/state/:state', async (req: Request, res: Response) => {
   try {
-    const state = req.params.state.toUpperCase();
+    const state = String(req.params.state).toUpperCase();
     if (!/^[A-Z]{2}$/.test(state)) {
       return res.status(400).json({ error: 'Invalid state code' });
     }
@@ -206,12 +206,12 @@ candidatesRouter.get('/state/:state', async (req: Request, res: Response) => {
 // ── GET /api/v1/candidates/district/:state/:district ──────
 candidatesRouter.get('/district/:state/:district', async (req: Request, res: Response) => {
   try {
-    const state = req.params.state.toUpperCase();
+    const state = String(req.params.state).toUpperCase();
     if (!/^[A-Z]{2}$/.test(state)) {
       return res.status(400).json({ error: 'Invalid state code' });
     }
 
-    const district = parseInt(req.params.district, 10);
+    const district = parseInt(String(req.params.district), 10);
     if (isNaN(district) || district < 0 || district > 53) {
       return res.status(400).json({ error: 'Invalid district number' });
     }
@@ -242,7 +242,7 @@ candidatesRouter.get('/district/:state/:district', async (req: Request, res: Res
 candidatesRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     // FIX: Validate UUID format before hitting Postgres
-    if (!UUID_RE.test(req.params.id)) {
+    if (!UUID_RE.test(String(req.params.id))) {
       return res.status(400).json({ error: 'Invalid candidate ID format' });
     }
 
@@ -253,7 +253,7 @@ candidatesRouter.get('/:id', async (req: Request, res: Response) => {
        JOIN states s ON c.state = s.code
        JOIN elections e ON c.election_id = e.id
        WHERE c.id = $1`,
-      [req.params.id]
+      [String(req.params.id)]
     );
 
     if (result.rows.length === 0) {

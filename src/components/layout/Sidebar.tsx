@@ -2,20 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Vote,
-  Users,
   BarChart3,
-  Database,
-  Shield,
-  Settings,
   Zap,
   ChevronDown,
   ChevronRight,
   Search,
-  Globe,
-  Landmark,
-  Radio,
-  FileBarChart,
-  Code,
+  MapPin,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,38 +33,14 @@ const NAV_GROUPS: NavGroupDef[] = [
     label: 'Explore',
     items: [
       { label: 'Elections', to: '/', icon: Vote },
-      { label: 'Congress', to: '/congress', icon: Users },
-    ],
-  },
-  {
-    key: 'portals',
-    label: 'Portals',
-    items: [
-      { label: 'Campaign Portal', to: '/portal/campaign', icon: Landmark },
-      { label: 'Candidate Portal', to: '/portal/candidate', icon: FileBarChart },
-    ],
-  },
-  {
-    key: 'data-tools',
-    label: 'Data Tools',
-    items: [
-      { label: 'Real-Time Monitor', to: '/monitor', icon: Radio },
-      { label: 'Data Steward', to: '/steward', icon: Database },
-      { label: 'Civic Data APIs', to: '/apis', icon: Code },
-    ],
-  },
-  {
-    key: 'admin',
-    label: 'Admin',
-    items: [
-      { label: 'Congress Admin', to: '/admin/congress', icon: Shield },
-      { label: 'Global Observatory', to: '/admin/observatory', icon: Globe },
+      { label: 'Dashboard', to: '/dashboard', icon: BarChart3 },
     ],
   },
 ];
 
 const QUICK_ACCESS: NavItemDef[] = [
   { label: '2026 Midterms', to: '/search?q=2026', icon: Zap },
+  { label: 'Browse by State', to: '/search?q=', icon: MapPin },
 ];
 
 // ── Storage helpers ────────────────────────────────────────
@@ -202,12 +170,13 @@ export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps
         ))}
       </nav>
 
-      {/* ── Footer (settings) ──────────────────────────── */}
-      <div className="shrink-0 border-t border-slate-800 py-2">
-        <SidebarNavItem
-          item={{ label: 'Settings', to: '/settings', icon: Settings }}
-          collapsed={collapsed}
-        />
+      {/* ── Footer ──────────────────────────────────────── */}
+      <div className="shrink-0 border-t border-slate-800 py-2 px-4">
+        {!collapsed && (
+          <p className="text-[10px] text-slate-600 py-2">
+            Federal Candidates Tracker v1.0
+          </p>
+        )}
       </div>
     </aside>
   );

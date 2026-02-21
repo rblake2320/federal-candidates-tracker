@@ -120,7 +120,7 @@ electionsRouter.get('/special', async (req: Request, res: Response) => {
 // ── GET /api/v1/elections/:id ─────────────────────────────
 electionsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    if (!UUID_RE.test(req.params.id)) {
+    if (!UUID_RE.test(String(req.params.id))) {
       return res.status(400).json({ error: 'Invalid election ID format' });
     }
 
@@ -129,7 +129,7 @@ electionsRouter.get('/:id', async (req: Request, res: Response) => {
        FROM elections e
        JOIN states s ON e.state = s.code
        WHERE e.id = $1`,
-      [req.params.id]
+      [String(req.params.id)]
     );
 
     if (result.rows.length === 0) {
@@ -143,7 +143,7 @@ electionsRouter.get('/:id', async (req: Request, res: Response) => {
        FROM candidates c
        WHERE c.election_id = $1 AND c.status != 'withdrawn'
        ORDER BY c.party ASC, c.full_name ASC`,
-      [req.params.id]
+      [String(req.params.id)]
     );
 
     res.json({

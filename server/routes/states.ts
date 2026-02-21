@@ -22,7 +22,7 @@ statesRouter.get('/', async (req: Request, res: Response) => {
 // Detailed state view with all races and candidates
 statesRouter.get('/:code', async (req: Request, res: Response) => {
   try {
-    const code = req.params.code.toUpperCase();
+    const code = String(req.params.code).toUpperCase();
     if (!/^[A-Z]{2}$/.test(code)) {
       return res.status(400).json({ error: 'Invalid state code' });
     }

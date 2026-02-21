@@ -1,8 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Search, Bell, Settings, Landmark } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 // ── Props ──────────────────────────────────────────────────
 
@@ -99,38 +98,9 @@ export function TopBar({ onToggleSidebar, className }: TopBarProps) {
 
       {/* ── Right actions ──────────────────────────────── */}
       <div className="flex items-center gap-1.5">
-        {/* Congress button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/congress')}
-          className="hidden sm:inline-flex gap-1.5 text-slate-300"
-        >
-          <Landmark className="w-4 h-4" />
-          <span>Congress</span>
-        </Button>
-
-        {/* Notifications */}
-        <button
-          className="flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors relative"
-          aria-label="Notifications"
-        >
-          <Bell className="w-4 h-4" />
-        </button>
-
-        {/* Sign In */}
-        <Button variant="outline" size="sm" className="hidden sm:inline-flex">
-          Sign In
-        </Button>
-
-        {/* Settings */}
-        <button
-          onClick={() => navigate('/settings')}
-          className="flex items-center justify-center w-9 h-9 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          aria-label="Settings"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
+        <span className="text-xs text-slate-500 hidden sm:block">
+          2026 Midterm Elections
+        </span>
       </div>
     </header>
   );
