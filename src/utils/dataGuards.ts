@@ -74,6 +74,10 @@ export function formatElectionTitle(election: Election): string {
     return `${year} ${stateName} Senate Race`;
   }
 
+  if (election.office === 'governor') {
+    return `${year} ${stateName} Governor Race`;
+  }
+
   if (election.office === 'house') {
     const districtLabel =
       election.district !== null && election.district !== undefined
@@ -96,6 +100,7 @@ export function formatElectionSubtitle(election: Election): string {
   if (election.election_type === 'special') {
     if (election.office === 'senate') return 'Special Senate Election';
     if (election.office === 'house') return 'Special House Election';
+    if (election.office === 'governor') return 'Special Governor Election';
     return 'Special Election';
   }
 
@@ -105,6 +110,10 @@ export function formatElectionSubtitle(election: Election): string {
 
   if (election.office === 'senate') {
     return 'Senate Seat';
+  }
+
+  if (election.office === 'governor') {
+    return 'Statewide Executive Race';
   }
 
   if (election.office === 'house') {

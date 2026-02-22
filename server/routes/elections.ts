@@ -5,7 +5,7 @@ import { logger } from '../services/logger.js';
 export const electionsRouter = Router();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const VALID_OFFICE = new Set(['senate', 'house']);
+const VALID_OFFICE = new Set(['senate', 'house', 'governor']);
 const VALID_ELECTION_TYPE = new Set(['regular', 'special']);
 
 // ── GET /api/v1/elections ─────────────────────────────────

@@ -40,6 +40,8 @@ function officeLabel(office: Election['office']): string {
       return 'Federal - Senate';
     case 'house':
       return 'Federal - House';
+    case 'governor':
+      return 'State - Governor';
     default:
       return 'Federal';
   }
@@ -55,6 +57,10 @@ function buildTitle(election: Election): string {
     return `${year} ${state} Senate Race`;
   }
 
+  if (election.office === 'governor') {
+    return `${year} ${state} Governor Race`;
+  }
+
   if (election.office === 'house' && election.district != null) {
     return `${year} ${state} House District ${election.district}`;
   }
@@ -67,6 +73,10 @@ function buildSubtitle(election: Election): string | null {
 
   if (election.office === 'senate' && election.senate_class != null) {
     return `Class ${election.senate_class === 1 ? 'I' : election.senate_class === 2 ? 'II' : 'III'} Senate Seat`;
+  }
+
+  if (election.office === 'governor') {
+    return 'Statewide Executive Race';
   }
 
   if (election.office === 'house' && election.district == null) {

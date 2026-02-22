@@ -12,7 +12,7 @@ const VALID_PARTY = new Set([
   'democratic', 'republican', 'libertarian', 'green',
   'constitution', 'independent', 'no_party', 'other',
 ]);
-const VALID_OFFICE = new Set(['senate', 'house']);
+const VALID_OFFICE = new Set(['senate', 'house', 'governor']);
 const VALID_STATUS = new Set([
   'declared', 'exploratory', 'filed', 'qualified',
   'withdrawn', 'won', 'lost', 'runoff',

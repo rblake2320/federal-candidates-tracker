@@ -1,6 +1,6 @@
 // ── Enums ──────────────────────────────────────────────────
 
-export type OfficeType = 'senate' | 'house';
+export type OfficeType = 'senate' | 'house' | 'governor';
 export type ElectionType = 'regular' | 'special';
 export type CandidateStatus = 'declared' | 'exploratory' | 'filed' | 'qualified' | 'withdrawn' | 'won' | 'lost' | 'runoff';
 export type PartyAffiliation =
@@ -129,9 +129,11 @@ export interface Stats {
   total_challengers: number;
   total_senate_races: number;
   total_house_races: number;
+  total_governor_races: number;
   total_special_elections: number;
   senate_candidates: number;
   house_candidates: number;
+  governor_candidates: number;
   candidates_by_party: Record<string, number>;
   avg_data_confidence: number;
   high_confidence_count: number;

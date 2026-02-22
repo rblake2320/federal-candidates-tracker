@@ -34,6 +34,7 @@ const OFFICE_OPTIONS = [
   { value: '', label: 'All Offices' },
   { value: 'senate', label: 'Senate' },
   { value: 'house', label: 'House' },
+  { value: 'governor', label: 'Governor' },
 ] as const;
 
 const ELECTION_TYPE_OPTIONS = [
@@ -187,12 +188,12 @@ export function FilterPanel({
         <SectionHeader icon={Building2} label="Government Level" />
         <div className="flex items-center gap-2">
           <Badge variant="default" className="text-xs px-2 py-0.5">
-            Federal
+            Federal &amp; State
           </Badge>
-          <span className="text-xs text-slate-500">Senate &amp; House</span>
+          <span className="text-xs text-slate-500">Senate, House &amp; Governor</span>
         </div>
         <p className="text-[11px] text-slate-500 leading-tight">
-          State &amp; local races coming soon.
+          Local races coming soon.
         </p>
       </div>
     </div>

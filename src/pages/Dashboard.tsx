@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Users, Building2, Home, Zap, TrendingUp, Database, MapPin, BarChart3, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { Users, Building2, Home, Landmark, Zap, TrendingUp, Database, MapPin, BarChart3, AlertCircle, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -81,7 +81,7 @@ export function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <StatCard
           label="Total Candidates"
           value={stats?.total_candidates ?? '—'}
@@ -105,6 +105,14 @@ export function Dashboard() {
           error={statsError}
           icon={Home}
           iconColor="text-emerald-400"
+        />
+        <StatCard
+          label="Governor Races"
+          value={stats?.total_governor_races ?? '—'}
+          loading={statsLoading}
+          error={statsError}
+          icon={Landmark}
+          iconColor="text-rose-400"
         />
         <StatCard
           label="Special Elections"

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, Users, MapPin, Building2, Home } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, Building2, Home, Landmark } from 'lucide-react';
 
 const PARTY_BADGE_VARIANT: Record<string, 'democratic' | 'republican' | 'libertarian' | 'green' | 'independent' | 'other'> = {
   democratic: 'democratic',
@@ -55,6 +55,7 @@ export function StatePage() {
   }
 
   const senateElections = elections.filter(e => e.office === 'senate');
+  const governorElections = elections.filter(e => e.office === 'governor');
   const houseElections = elections
     .filter(e => e.office === 'house')
     .sort((a, b) => (a.district || 0) - (b.district || 0));
@@ -86,9 +87,31 @@ export function StatePage() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <MiniStat icon={<Users className="h-4 w-4 text-blue-400" />} label="Total Candidates" value={summary.total_candidates} />
         <MiniStat icon={<Building2 className="h-4 w-4 text-emerald-400" />} label="Senate Races" value={senateElections.length} />
+        <MiniStat icon={<Landmark className="h-4 w-4 text-rose-400" />} label="Governor" value={governorElections.length} />
         <MiniStat icon={<Home className="h-4 w-4 text-amber-400" />} label="House Races" value={houseElections.length} />
-        <MiniStat icon={<MapPin className="h-4 w-4 text-purple-400" />} label="House Seats" value={state.house_seats} />
       </div>
+
+      {/* Governor Race */}
+      {governorElections.length > 0 && (
+        <section>
+          <h3 className="flex items-center gap-2 text-xl font-semibold text-white mb-4">
+            <Landmark className="h-5 w-5 text-slate-400" />
+            Governor
+          </h3>
+          <div className="space-y-4">
+            {governorElections.map(election => (
+              <RaceCard
+                key={election.id}
+                title={`Governor${election.election_type === 'special' ? ' (Special)' : ''}`}
+                subtitle={election.cook_rating || 'No rating'}
+                competitive={election.is_competitive}
+                isSpecial={election.election_type === 'special'}
+                candidates={candidatesByElection.get(election.id) || []}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Senate Races */}
       {senateElections.length > 0 && (

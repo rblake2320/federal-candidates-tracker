@@ -140,7 +140,7 @@ export function SearchPage() {
     activeFilters.push({
       key: 'office',
       label: 'Office',
-      value: office === 'senate' ? 'Senate' : office === 'house' ? 'House' : office,
+      value: office === 'senate' ? 'Senate' : office === 'house' ? 'House' : office === 'governor' ? 'Governor' : office,
     });
   if (state) activeFilters.push({ key: 'state', label: 'State', value: state });
 
@@ -205,6 +205,7 @@ export function SearchPage() {
           <option value="">All Offices</option>
           <option value="senate">Senate</option>
           <option value="house">House</option>
+          <option value="governor">Governor</option>
         </Select>
 
         <Select

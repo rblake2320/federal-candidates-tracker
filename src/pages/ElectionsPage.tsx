@@ -43,6 +43,7 @@ const US_STATES: Record<string, string> = {
 const OFFICE_LABELS: Record<string, string> = {
   senate: 'Senate',
   house: 'House',
+  governor: 'Governor',
 };
 
 const ELECTION_TYPE_LABELS: Record<string, string> = {

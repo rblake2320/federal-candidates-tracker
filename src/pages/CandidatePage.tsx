@@ -75,7 +75,9 @@ export function CandidatePage() {
   const raceLabel =
     c.office === 'senate'
       ? `U.S. Senate \u2014 ${c.state_name}`
-      : `${c.state_name} District ${c.district}`;
+      : c.office === 'governor'
+        ? `Governor \u2014 ${c.state_name}`
+        : `${c.state_name} District ${c.district}`;
 
   const hasFinanceData = !!(c.total_raised || c.total_spent || c.cash_on_hand);
   const hasPollingData = !!c.latest_poll_pct;
