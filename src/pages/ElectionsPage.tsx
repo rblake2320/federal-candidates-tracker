@@ -20,6 +20,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ElectionCard } from '@/components/elections/ElectionCard';
 import { ElectionCardSkeleton } from '@/components/elections/ElectionCardSkeleton';
 import { FilterPanel } from '@/components/filters/FilterPanel';
+import { VoterInfoLookup } from '@/components/widgets/VoterInfoLookup';
+import { AiSearchWidget } from '@/components/widgets/AiSearchWidget';
+import { LocalElectionSearch } from '@/components/widgets/LocalElectionSearch';
+import { FindMissingElections } from '@/components/widgets/FindMissingElections';
 import type { Election, Candidate, PaginatedResponse } from '@/types/models';
 
 // ── Constants ──────────────────────────────────────────────
@@ -275,8 +279,8 @@ export function ElectionsPage() {
 
   return (
     <div className="flex gap-6 min-h-[calc(100vh-8rem)]">
-      {/* ── Filter Panel (left sidebar) ──────────────── */}
-      <div className="hidden lg:block w-64 shrink-0">
+      {/* ── Filter Panel + Widgets (left sidebar) ──────── */}
+      <div className="hidden lg:block w-64 shrink-0 space-y-4">
         <FilterPanel
           state={state}
           onStateChange={(v) => setFilter('state', v)}
@@ -296,6 +300,10 @@ export function ElectionsPage() {
             setSearchParams({ page: '1' });
           }}
         />
+        <AiSearchWidget />
+        <VoterInfoLookup />
+        <LocalElectionSearch />
+        <FindMissingElections />
       </div>
 
       {/* ── Mobile filter sheet ──────────────────────── */}

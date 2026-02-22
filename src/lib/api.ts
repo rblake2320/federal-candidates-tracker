@@ -224,3 +224,45 @@ export function updateAdminClaim(id: string, status: 'approved' | 'rejected'): P
     body: JSON.stringify({ status }),
   });
 }
+
+// ── Voter Info ────────────────────────────────────────────────
+
+export function getVoterInfo(state: string, district?: number): Promise<{
+  state: { code: string; name: string; house_seats: number } | null;
+  elections: Election[];
+  candidates: Candidate[];
+  total_elections: number;
+  total_candidates: number;
+}> {
+  const params = new URLSearchParams({ state });
+  if (district !== undefined) params.set('district', String(district));
+  return fetchJSON(`${API_BASE}/voter-info?${params}`);
+}
+
+// ── AI Search ─────────────────────────────────────────────────
+
+export function aiSearch(q: string): Promise<{
+  query: string;
+  candidates: Candidate[];
+  elections: Election[];
+  total_candidates: number;
+  total_elections: number;
+}> {
+  return fetchJSON(`${API_BASE}/search/ai?q=${encodeURIComponent(q)}`);
+}
+
+// ── Missing Elections ─────────────────────────────────────────
+
+export function getMissingElections(): Promise<{
+  data: Array<{
+    code: string;
+    name: string;
+    house_seats: number;
+    senate_elections: number;
+    house_elections: number;
+    governor_elections: number;
+  }>;
+  total: number;
+}> {
+  return fetchJSON(`${API_BASE}/elections/missing`);
+}

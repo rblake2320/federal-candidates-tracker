@@ -158,6 +158,33 @@ electionsRouter.get('/special', async (req: Request, res: Response) => {
   }
 });
 
+// ── GET /api/v1/elections/missing ──────────────────────────
+// Find states that should have elections but don't have records
+electionsRouter.get('/missing', async (_req: Request, res: Response) => {
+  try {
+    const result = await query(
+      `SELECT s.code, s.name, s.house_seats,
+              COUNT(DISTINCT CASE WHEN e.office = 'senate' THEN e.id END) as senate_elections,
+              COUNT(DISTINCT CASE WHEN e.office = 'house' THEN e.id END) as house_elections,
+              COUNT(DISTINCT CASE WHEN e.office = 'governor' THEN e.id END) as governor_elections
+       FROM states s
+       LEFT JOIN elections e ON e.state = s.code
+       GROUP BY s.code, s.name, s.house_seats
+       HAVING COUNT(DISTINCT CASE WHEN e.office = 'house' THEN e.id END) < s.house_seats
+           OR COUNT(DISTINCT CASE WHEN e.office = 'senate' THEN e.id END) = 0
+       ORDER BY s.name`
+    );
+
+    res.json({
+      data: result.rows,
+      total: result.rows.length,
+    });
+  } catch (error) {
+    logger.error('Error finding missing elections:', error);
+    res.status(500).json({ error: 'Failed to find missing elections' });
+  }
+});
+
 // ── GET /api/v1/elections/:id ─────────────────────────────
 electionsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
