@@ -7,6 +7,7 @@ import {
   Calendar,
   BarChart3,
   RefreshCw,
+  Landmark,
 } from 'lucide-react';
 import { getStates } from '@/lib/api';
 import { Select } from '@/components/ui/select';
@@ -20,12 +21,20 @@ import { STATE_NAMES } from '@/utils/dataGuards';
 interface FilterPanelProps {
   state: string;
   onStateChange: (state: string) => void;
+  office: string;
+  onOfficeChange: (office: string) => void;
   electionTypes: string[];
   onElectionTypesChange: (types: string[]) => void;
   onClear: () => void;
 }
 
 // ── Constants ────────────────────────────────────────────────
+
+const OFFICE_OPTIONS = [
+  { value: '', label: 'All Offices' },
+  { value: 'senate', label: 'Senate' },
+  { value: 'house', label: 'House' },
+] as const;
 
 const ELECTION_TYPE_OPTIONS = [
   { value: 'regular', label: 'Regular Elections' },
@@ -43,6 +52,8 @@ const GOVERNMENT_LEVELS = [
 export function FilterPanel({
   state,
   onStateChange,
+  office,
+  onOfficeChange,
   electionTypes,
   onElectionTypesChange,
   onClear,
@@ -56,7 +67,7 @@ export function FilterPanel({
   const stateOptions = buildStateOptions(statesData?.data);
 
   const hasActiveFilters =
-    state !== '' || electionTypes.length > 0;
+    state !== '' || office !== '' || electionTypes.length > 0;
 
   function handleElectionTypeToggle(type: string) {
     if (electionTypes.includes(type)) {
@@ -143,6 +154,22 @@ export function FilterPanel({
               </option>
             ))
           )}
+        </Select>
+      </div>
+
+      {/* ── Office Filter ──────────────────────────────────── */}
+      <div className="space-y-2">
+        <SectionHeader icon={Landmark} label="Office" />
+        <Select
+          value={office}
+          onChange={(e) => onOfficeChange(e.target.value)}
+          className="w-full"
+        >
+          {OFFICE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </Select>
       </div>
 

@@ -124,7 +124,7 @@ export function CandidatePreview({
       : `${displayTotal} total`;
 
   // Derive state code from first candidate for the link
-  const stateCode = candidates[0]?.state?.toLowerCase() ?? '';
+  const stateCode = candidates[0]?.state ?? '';
 
   return (
     <div className={cn('space-y-3', className)}>

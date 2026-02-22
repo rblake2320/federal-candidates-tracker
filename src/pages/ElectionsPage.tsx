@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -11,6 +11,7 @@ import {
   Star,
   Users,
   MapPin,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { getElections, getCandidatesByState } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
@@ -159,6 +160,17 @@ export function ElectionsPage() {
   const pagination = electionsResponse?.pagination;
   const totalElections = pagination?.total ?? 0;
   const hasFilters = !!(state || office || electionType);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Close mobile filter sheet on ESC key
+  useEffect(() => {
+    if (!mobileFiltersOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileFiltersOpen(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [mobileFiltersOpen]);
 
   const activeFilters: { key: string; label: string; value: string }[] = [];
   if (state) {
@@ -192,6 +204,8 @@ export function ElectionsPage() {
         <FilterPanel
           state={state}
           onStateChange={(v) => setFilter('state', v)}
+          office={office}
+          onOfficeChange={(v) => setFilter('office', v)}
           electionTypes={electionType ? [electionType] : []}
           onElectionTypesChange={(types) =>
             setFilter('type', types.length > 0 ? types[types.length - 1] : '')
@@ -201,6 +215,47 @@ export function ElectionsPage() {
           }}
         />
       </div>
+
+      {/* ── Mobile filter sheet ──────────────────────── */}
+      {mobileFiltersOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm lg:hidden"
+            onClick={() => setMobileFiltersOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="mobile-filters-title"
+            className="fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] overflow-y-auto rounded-t-2xl bg-slate-900 border-t border-slate-700 p-4 lg:hidden animate-slide-in-bottom"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span id="mobile-filters-title" className="text-sm font-semibold text-white">Filters</span>
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className="flex items-center justify-center w-8 h-8 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                aria-label="Close filters"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <FilterPanel
+              state={state}
+              onStateChange={(v) => { setFilter('state', v); }}
+              office={office}
+              onOfficeChange={(v) => { setFilter('office', v); }}
+              electionTypes={electionType ? [electionType] : []}
+              onElectionTypesChange={(types) =>
+                setFilter('type', types.length > 0 ? types[types.length - 1] : '')
+              }
+              onClear={() => {
+                setSearchParams({ page: '1' });
+              }}
+            />
+          </div>
+        </>
+      )}
 
       {/* ── Main content ─────────────────────────────── */}
       <div className="flex-1 min-w-0 space-y-8">
@@ -244,7 +299,20 @@ export function ElectionsPage() {
               )}
             </div>
 
-            {/* Grid/List toggle */}
+            {/* Mobile filter button + Grid/List toggle */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMobileFiltersOpen(true)}
+                className="lg:hidden flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                Filters
+                {hasFilters && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                    {activeFilters.length}
+                  </span>
+                )}
+              </button>
             <div className="flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-800/50 p-0.5">
               <Button
                 variant={view === 'grid' ? 'secondary' : 'ghost'}
@@ -264,6 +332,7 @@ export function ElectionsPage() {
               >
                 <List className="w-4 h-4" />
               </Button>
+            </div>
             </div>
           </div>
 
