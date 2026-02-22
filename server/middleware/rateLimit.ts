@@ -32,7 +32,11 @@ export function rateLimit({
   return (req: Request, res: Response, next: NextFunction) => {
     const key = keyGenerator
       ? keyGenerator(req)
-      : req.ip || req.socket.remoteAddress || 'unknown';
+      : (req.headers['cf-connecting-ip'] as string)
+        || req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim()
+        || req.ip
+        || req.socket.remoteAddress
+        || 'unknown';
 
     const now = Date.now();
     let entry = store.get(key);

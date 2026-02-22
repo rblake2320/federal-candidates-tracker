@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { setAuthToken, clearAuthToken } from '@/lib/api';
+import { setAuthToken, clearAuthToken, API_BASE } from '@/lib/api';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -31,7 +31,6 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const TOKEN_KEY = 'et_auth_token';
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
 // ── Provider ──────────────────────────────────────────────
 

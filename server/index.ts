@@ -20,12 +20,28 @@ import { aiSearchRouter } from './routes/ai-search.js';
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
+// Trust proxy — required for correct client IP behind Cloudflare Tunnel / reverse proxies
+app.set('trust proxy', 1);
+
 // ── Global Middleware ──────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',').map(s => s.trim());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
+
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(rateLimit({ windowMs: 60 * 60 * 1000, max: 500 }));

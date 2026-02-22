@@ -12,7 +12,7 @@ import type {
   CandidateProfileResponse,
 } from '../types/models';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
 // ── Auth Token Management ────────────────────────────────────
 
