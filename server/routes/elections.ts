@@ -6,7 +6,7 @@ export const electionsRouter = Router();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const VALID_OFFICE = new Set(['senate', 'house', 'governor']);
-const VALID_ELECTION_TYPE = new Set(['regular', 'special']);
+const VALID_ELECTION_TYPE = new Set(['regular', 'special', 'primary', 'runoff']);
 
 // ── GET /api/v1/elections ─────────────────────────────────
 electionsRouter.get('/', async (req: Request, res: Response) => {
@@ -18,6 +18,9 @@ electionsRouter.get('/', async (req: Request, res: Response) => {
       office,
       election_type,
       competitive,
+      date_from,
+      date_to,
+      party,
       sort = 'election_date',
       order = 'asc',
     } = req.query;
@@ -57,6 +60,36 @@ electionsRouter.get('/', async (req: Request, res: Response) => {
 
     if (competitive === 'true') {
       conditions.push(`e.is_competitive = TRUE`);
+    }
+
+    // Date range filters
+    if (date_from) {
+      const df = String(date_from);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(df)) {
+        return res.status(400).json({ error: 'date_from must be YYYY-MM-DD format' });
+      }
+      conditions.push(`e.election_date >= $${paramIdx++}`);
+      params.push(df);
+    }
+
+    if (date_to) {
+      const dt = String(date_to);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dt)) {
+        return res.status(400).json({ error: 'date_to must be YYYY-MM-DD format' });
+      }
+      conditions.push(`e.election_date <= $${paramIdx++}`);
+      params.push(dt);
+    }
+
+    // Party filter: elections that have at least one candidate of the specified party
+    if (party) {
+      const validParties = new Set(['democratic', 'republican', 'libertarian', 'green', 'constitution', 'independent', 'no_party', 'other']);
+      const parties = (party as string).split(',').map(p => p.trim().toLowerCase());
+      if (parties.some(p => !validParties.has(p))) {
+        return res.status(400).json({ error: `Invalid party value. Allowed: ${[...validParties].join(', ')}` });
+      }
+      conditions.push(`EXISTS (SELECT 1 FROM candidates c WHERE c.election_id = e.id AND c.party = ANY($${paramIdx++}::party_affiliation[]))`);
+      params.push(parties);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';

@@ -49,6 +49,27 @@ const OFFICE_LABELS: Record<string, string> = {
 const ELECTION_TYPE_LABELS: Record<string, string> = {
   regular: 'Regular',
   special: 'Special',
+  primary: 'Primary',
+  runoff: 'Runoff',
+};
+
+const PARTY_LABELS: Record<string, string> = {
+  democratic: 'Democratic',
+  republican: 'Republican',
+  independent: 'Independent',
+  other: 'Other Parties',
+};
+
+const GOV_LEVEL_LABELS: Record<string, string> = {
+  federal: 'Federal',
+  state: 'State',
+};
+
+const TIME_RANGE_LABELS: Record<string, string> = {
+  '30': 'Next 30 Days',
+  '90': 'Next 90 Days',
+  '180': 'Next 6 Months',
+  year: 'This Year',
 };
 
 const PAGE_SIZE = 12;
@@ -62,18 +83,51 @@ export function ElectionsPage() {
   const state = searchParams.get('state') || '';
   const office = searchParams.get('office') || '';
   const electionType = searchParams.get('type') || '';
+  const timeRange = searchParams.get('time') || '';
+  const partyFilter = searchParams.get('party') || '';
+  const govLevel = searchParams.get('gov') || '';
   const view = (searchParams.get('view') as 'grid' | 'list') || 'grid';
   const page = parseInt(searchParams.get('page') || '1', 10);
+
+  // Compute date range from timeRange selection
+  const dateRange = useMemo(() => {
+    if (!timeRange) return {};
+    const now = new Date();
+    const dateFrom = now.toISOString().split('T')[0];
+    if (timeRange === 'year') {
+      return { date_from: `${now.getFullYear()}-01-01`, date_to: `${now.getFullYear()}-12-31` };
+    }
+    const days = parseInt(timeRange, 10);
+    if (isNaN(days)) return {};
+    const future = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    return { date_from: dateFrom, date_to: future.toISOString().split('T')[0] };
+  }, [timeRange]);
+
+  // Compute office filter from gov level checkboxes (combines with explicit office)
+  const computedOffice = useMemo(() => {
+    if (office) return office; // explicit office overrides gov level
+    if (govLevel === '') return ''; // no gov filter
+    const levels = govLevel.split(',');
+    const hasFederal = levels.includes('federal');
+    const hasState = levels.includes('state');
+    if (hasFederal && hasState) return ''; // both = no filter
+    if (hasFederal) return ''; // senate+house = need to handle via multiple params
+    if (hasState) return 'governor';
+    return '';
+  }, [office, govLevel]);
 
   // ── Data fetching ──────────────────────────────────────
 
   const { data: electionsResponse, isLoading, isError } = useQuery<PaginatedResponse<Election>>({
-    queryKey: ['elections', { state, office, election_type: electionType, page }],
+    queryKey: ['elections', { state, office: computedOffice, election_type: electionType, page, ...dateRange, party: partyFilter }],
     queryFn: () =>
       getElections({
         ...(state && { state }),
-        ...(office && { office }),
+        ...(computedOffice && { office: computedOffice }),
         ...(electionType && { election_type: electionType }),
+        ...(dateRange.date_from && { date_from: dateRange.date_from }),
+        ...(dateRange.date_to && { date_to: dateRange.date_to }),
+        ...(partyFilter && { party: partyFilter }),
         page,
         limit: PAGE_SIZE,
       }),
@@ -160,7 +214,7 @@ export function ElectionsPage() {
   const elections = electionsResponse?.data ?? [];
   const pagination = electionsResponse?.pagination;
   const totalElections = pagination?.total ?? 0;
-  const hasFilters = !!(state || office || electionType);
+  const hasFilters = !!(state || office || electionType || timeRange || partyFilter || govLevel);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Close mobile filter sheet on ESC key
@@ -195,6 +249,27 @@ export function ElectionsPage() {
       value: ELECTION_TYPE_LABELS[electionType] || electionType,
     });
   }
+  if (timeRange) {
+    activeFilters.push({
+      key: 'time',
+      label: 'Time',
+      value: TIME_RANGE_LABELS[timeRange] || timeRange,
+    });
+  }
+  if (partyFilter) {
+    activeFilters.push({
+      key: 'party',
+      label: 'Party',
+      value: partyFilter.split(',').map(p => PARTY_LABELS[p] || p).join(', '),
+    });
+  }
+  if (govLevel) {
+    activeFilters.push({
+      key: 'gov',
+      label: 'Level',
+      value: govLevel.split(',').map(l => GOV_LEVEL_LABELS[l] || l).join(', '),
+    });
+  }
 
   // ── Render ─────────────────────────────────────────────
 
@@ -211,6 +286,12 @@ export function ElectionsPage() {
           onElectionTypesChange={(types) =>
             setFilter('type', types.length > 0 ? types[types.length - 1] : '')
           }
+          timeRange={timeRange}
+          onTimeRangeChange={(v) => setFilter('time', v)}
+          parties={partyFilter ? partyFilter.split(',') : []}
+          onPartiesChange={(ps) => setFilter('party', ps.join(','))}
+          govLevels={govLevel ? govLevel.split(',') : []}
+          onGovLevelsChange={(ls) => setFilter('gov', ls.join(','))}
           onClear={() => {
             setSearchParams({ page: '1' });
           }}
@@ -250,6 +331,12 @@ export function ElectionsPage() {
               onElectionTypesChange={(types) =>
                 setFilter('type', types.length > 0 ? types[types.length - 1] : '')
               }
+              timeRange={timeRange}
+              onTimeRangeChange={(v) => setFilter('time', v)}
+              parties={partyFilter ? partyFilter.split(',') : []}
+              onPartiesChange={(ps) => setFilter('party', ps.join(','))}
+              govLevels={govLevel ? govLevel.split(',') : []}
+              onGovLevelsChange={(ls) => setFilter('gov', ls.join(','))}
               onClear={() => {
                 setSearchParams({ page: '1' });
               }}

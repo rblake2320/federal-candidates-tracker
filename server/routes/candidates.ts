@@ -17,7 +17,7 @@ const VALID_STATUS = new Set([
   'declared', 'exploratory', 'filed', 'qualified',
   'withdrawn', 'won', 'lost', 'runoff',
 ]);
-const VALID_ELECTION_TYPE = new Set(['regular', 'special']);
+const VALID_ELECTION_TYPE = new Set(['regular', 'special', 'primary', 'runoff']);
 
 // FIX: Strict allowlist map for sort columns — prevents injection via string concat
 const SORT_COLUMN_MAP: Record<string, string> = {

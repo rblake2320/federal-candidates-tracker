@@ -8,6 +8,8 @@ import {
   BarChart3,
   RefreshCw,
   Landmark,
+  Clock,
+  Flag,
 } from 'lucide-react';
 import { getStates } from '@/lib/api';
 import { Select } from '@/components/ui/select';
@@ -25,6 +27,12 @@ interface FilterPanelProps {
   onOfficeChange: (office: string) => void;
   electionTypes: string[];
   onElectionTypesChange: (types: string[]) => void;
+  timeRange: string;
+  onTimeRangeChange: (range: string) => void;
+  parties: string[];
+  onPartiesChange: (parties: string[]) => void;
+  govLevels: string[];
+  onGovLevelsChange: (levels: string[]) => void;
   onClear: () => void;
 }
 
@@ -40,6 +48,28 @@ const OFFICE_OPTIONS = [
 const ELECTION_TYPE_OPTIONS = [
   { value: 'regular', label: 'Regular Elections' },
   { value: 'special', label: 'Special Elections' },
+  { value: 'primary', label: 'Primary Elections' },
+  { value: 'runoff', label: 'Runoff Elections' },
+] as const;
+
+const TIME_RANGE_OPTIONS = [
+  { value: '', label: 'All Time' },
+  { value: '30', label: 'Next 30 Days' },
+  { value: '90', label: 'Next 90 Days' },
+  { value: '180', label: 'Next 6 Months' },
+  { value: 'year', label: 'This Year' },
+] as const;
+
+const PARTY_OPTIONS = [
+  { value: 'democratic', label: 'Democratic' },
+  { value: 'republican', label: 'Republican' },
+  { value: 'independent', label: 'Independent' },
+  { value: 'other', label: 'Other Parties' },
+] as const;
+
+const GOV_LEVEL_OPTIONS = [
+  { value: 'federal', label: 'Federal', desc: 'Senate & House' },
+  { value: 'state', label: 'State', desc: 'Governor' },
 ] as const;
 
 // ── Component ────────────────────────────────────────────────
@@ -51,6 +81,12 @@ export function FilterPanel({
   onOfficeChange,
   electionTypes,
   onElectionTypesChange,
+  timeRange,
+  onTimeRangeChange,
+  parties,
+  onPartiesChange,
+  govLevels,
+  onGovLevelsChange,
   onClear,
 }: FilterPanelProps) {
   const { data: statesData, isLoading: statesLoading } = useQuery({
@@ -58,11 +94,15 @@ export function FilterPanel({
     queryFn: getStates,
   });
 
-  // Build sorted state options from API data or fallback to static list
   const stateOptions = buildStateOptions(statesData?.data);
 
   const hasActiveFilters =
-    state !== '' || office !== '' || electionTypes.length > 0;
+    state !== '' ||
+    office !== '' ||
+    electionTypes.length > 0 ||
+    timeRange !== '' ||
+    parties.length > 0 ||
+    govLevels.length > 0;
 
   function handleElectionTypeToggle(type: string) {
     if (electionTypes.includes(type)) {
@@ -72,8 +112,20 @@ export function FilterPanel({
     }
   }
 
-  function handleClear() {
-    onClear();
+  function handlePartyToggle(party: string) {
+    if (parties.includes(party)) {
+      onPartiesChange(parties.filter((p) => p !== party));
+    } else {
+      onPartiesChange([...parties, party]);
+    }
+  }
+
+  function handleGovLevelToggle(level: string) {
+    if (govLevels.includes(level)) {
+      onGovLevelsChange(govLevels.filter((l) => l !== level));
+    } else {
+      onGovLevelsChange([...govLevels, level]);
+    }
   }
 
   return (
@@ -118,7 +170,7 @@ export function FilterPanel({
           <span className="text-sm font-medium text-slate-200">Filters</span>
         </div>
         <button
-          onClick={handleClear}
+          onClick={onClear}
           disabled={!hasActiveFilters}
           className={cn(
             'text-xs font-medium transition-colors',
@@ -129,6 +181,22 @@ export function FilterPanel({
         >
           Clear
         </button>
+      </div>
+
+      {/* ── Time Range Filter ────────────────────────────────── */}
+      <div className="space-y-2">
+        <SectionHeader icon={Clock} label="Time Range" />
+        <Select
+          value={timeRange}
+          onChange={(e) => onTimeRangeChange(e.target.value)}
+          className="w-full"
+        >
+          {TIME_RANGE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       {/* ── State Filter ───────────────────────────────────── */}
@@ -183,18 +251,44 @@ export function FilterPanel({
         </div>
       </div>
 
-      {/* ── Government Level ───────────────────────────────── */}
-      <div className="space-y-2">
-        <SectionHeader icon={Building2} label="Government Level" />
-        <div className="flex items-center gap-2">
-          <Badge variant="default" className="text-xs px-2 py-0.5">
-            Federal &amp; State
-          </Badge>
-          <span className="text-xs text-slate-500">Senate, House &amp; Governor</span>
+      {/* ── Party Filter ─────────────────────────────────────── */}
+      <div className="space-y-3">
+        <SectionHeader icon={Flag} label="Party" />
+        <div className="space-y-2">
+          {PARTY_OPTIONS.map((opt) => (
+            <Checkbox
+              key={opt.value}
+              label={opt.label}
+              checked={parties.includes(opt.value)}
+              onChange={() => handlePartyToggle(opt.value)}
+            />
+          ))}
         </div>
-        <p className="text-[11px] text-slate-500 leading-tight">
-          Local races coming soon.
-        </p>
+      </div>
+
+      {/* ── Government Level ───────────────────────────────── */}
+      <div className="space-y-3">
+        <SectionHeader icon={Building2} label="Government Level" />
+        <div className="space-y-2">
+          {GOV_LEVEL_OPTIONS.map((opt) => (
+            <Checkbox
+              key={opt.value}
+              label={`${opt.label} (${opt.desc})`}
+              checked={govLevels.includes(opt.value)}
+              onChange={() => handleGovLevelToggle(opt.value)}
+            />
+          ))}
+          <div className="pl-6">
+            <Checkbox
+              label="Local"
+              checked={false}
+              onChange={() => {}}
+              disabled
+              muted
+            />
+            <p className="text-[10px] text-slate-600 pl-6 mt-0.5">Coming soon</p>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -281,7 +375,6 @@ function buildStateOptions(
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  // Fallback to static STATE_NAMES if API hasn't loaded yet
   return Object.entries(STATE_NAMES)
     .map(([code, name]) => ({ code, name }))
     .sort((a, b) => a.name.localeCompare(b.name));

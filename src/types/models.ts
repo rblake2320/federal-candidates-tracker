@@ -1,7 +1,7 @@
 // ── Enums ──────────────────────────────────────────────────
 
 export type OfficeType = 'senate' | 'house' | 'governor';
-export type ElectionType = 'regular' | 'special';
+export type ElectionType = 'regular' | 'special' | 'primary' | 'runoff';
 export type CandidateStatus = 'declared' | 'exploratory' | 'filed' | 'qualified' | 'withdrawn' | 'won' | 'lost' | 'runoff';
 export type PartyAffiliation =
   | 'democratic' | 'republican' | 'libertarian' | 'green'
