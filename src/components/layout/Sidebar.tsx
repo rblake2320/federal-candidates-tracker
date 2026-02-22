@@ -4,6 +4,7 @@ import {
   Vote,
   BarChart3,
   Zap,
+  Bookmark,
   ChevronDown,
   ChevronRight,
   Search,
@@ -21,6 +22,7 @@ interface NavItemDef {
   label: string;
   to: string;
   icon: React.ElementType;
+  liveIndicator?: boolean;
 }
 
 interface NavGroupDef {
@@ -37,13 +39,14 @@ const NAV_GROUPS: NavGroupDef[] = [
     label: 'Explore',
     items: [
       { label: 'Elections', to: '/', icon: Vote },
-      { label: 'Dashboard', to: '/dashboard', icon: BarChart3 },
+      { label: 'Dashboard', to: '/dashboard', icon: BarChart3, liveIndicator: true },
     ],
   },
 ];
 
 const QUICK_ACCESS: NavItemDef[] = [
   { label: 'Find Candidates', to: '/search', icon: Zap },
+  { label: 'My Watchlist', to: '/watchlist', icon: Bookmark },
 ];
 
 // ── Storage helpers ────────────────────────────────────────
@@ -255,7 +258,17 @@ function SidebarNavItem({
       }
     >
       <Icon className="w-4 h-4 shrink-0" />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {!collapsed && (
+        <span className="truncate flex items-center gap-2">
+          {item.label}
+          {item.liveIndicator && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+          )}
+        </span>
+      )}
     </NavLink>
   );
 }

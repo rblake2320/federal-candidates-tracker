@@ -13,6 +13,7 @@ import { electionsRouter } from './routes/elections.js';
 import { statsRouter } from './routes/stats.js';
 import { statesRouter } from './routes/states.js';
 import { exportRouter } from './routes/export.js';
+import { watchlistRouter } from './routes/watchlist.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -45,6 +46,7 @@ app.use('/api/v1/elections', electionsRouter);
 app.use('/api/v1/stats', statsRouter);
 app.use('/api/v1/states', statesRouter);
 app.use('/api/v1/data/export', exportRouter);
+app.use('/api/v1/watchlist', watchlistRouter);
 
 // ── 404 Handler ────────────────────────────────────────────
 app.use((_req, res) => {

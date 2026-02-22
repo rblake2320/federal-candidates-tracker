@@ -4,13 +4,18 @@ import {
   Calendar,
   MapPin,
   Info,
+  Bookmark,
+  Loader2,
 } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import { CountdownTimer } from './CountdownTimer';
 import { CandidatePreview } from './CandidatePreview';
+import { useAuth } from '@/contexts/AuthContext';
+import { addToWatchlist, removeFromWatchlist, getWatchlist } from '@/lib/api';
 import type { Election, Candidate } from '@/types/models';
 
 interface ElectionCardProps {
@@ -211,15 +216,76 @@ export function ElectionCard({
             {totalCandidates} candidate{totalCandidates !== 1 ? 's' : ''}
           </span>
           <div className="flex-1" />
-          <Link
-            to={`/state/${stateCode}`}
-            className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'gap-1.5')}
-          >
-            <Info className="h-3.5 w-3.5" />
-            View Details
-          </Link>
+          <div className="flex items-center gap-2">
+            <WatchlistButton electionId={election.id} />
+            <Link
+              to={`/state/${stateCode}`}
+              className={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'gap-1.5')}
+            >
+              <Info className="h-3.5 w-3.5" />
+              View Details
+            </Link>
+          </div>
         </div>
       </div>
     </article>
+  );
+}
+
+// ── Watchlist bookmark button ────────────────────────────────
+
+function WatchlistButton({ electionId }: { electionId: string }) {
+  const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: watchlistData } = useQuery({
+    queryKey: ['watchlist'],
+    queryFn: getWatchlist,
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
+
+  const isBookmarked = watchlistData?.data?.some((e) => e.id === electionId) ?? false;
+
+  const addMutation = useMutation({
+    mutationFn: () => addToWatchlist(electionId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watchlist'] }),
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: () => removeFromWatchlist(electionId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watchlist'] }),
+  });
+
+  const isPending = addMutation.isPending || removeMutation.isPending;
+
+  if (!isAuthenticated) return null;
+
+  return (
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        if (isBookmarked) {
+          removeMutation.mutate();
+        } else {
+          addMutation.mutate();
+        }
+      }}
+      disabled={isPending}
+      className={cn(
+        'p-2 rounded-lg transition-colors',
+        isBookmarked
+          ? 'text-blue-400 hover:text-blue-300 bg-blue-500/10'
+          : 'text-slate-500 hover:text-blue-400 hover:bg-blue-500/10',
+        'disabled:opacity-50'
+      )}
+      title={isBookmarked ? 'Remove from watchlist' : 'Add to watchlist'}
+    >
+      {isPending ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Bookmark className={cn('h-4 w-4', isBookmarked && 'fill-current')} />
+      )}
+    </button>
   );
 }

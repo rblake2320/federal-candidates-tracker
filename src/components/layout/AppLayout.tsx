@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
+import { ServiceStatusBanner } from './ServiceStatusBanner';
 
 // ── Breakpoints (must match Tailwind's lg = 1024, md = 768) ──
 
@@ -100,6 +101,7 @@ export function AppLayout() {
 
       {/* ── Main area ──────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <ServiceStatusBanner />
         <TopBar onToggleSidebar={toggleMobileSidebar} />
 
         <main
