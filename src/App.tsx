@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './contexts/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { Dashboard } from './pages/Dashboard';
 import { StatePage } from './pages/StatePage';
@@ -32,18 +33,20 @@ function NotFound() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<ElectionsPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/state/:code" element={<StatePage />} />
-            <Route path="/candidate/:id" element={<CandidatePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<ElectionsPage />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/state/:code" element={<StatePage />} />
+              <Route path="/candidate/:id" element={<CandidatePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

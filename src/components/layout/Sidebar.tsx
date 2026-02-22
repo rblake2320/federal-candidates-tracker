@@ -7,8 +7,12 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
+  LogIn,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { LoginModal } from '@/components/auth/LoginModal';
+import { UserMenu } from '@/components/auth/UserMenu';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -73,7 +77,9 @@ interface SidebarProps {
 // ── Component ──────────────────────────────────────────────
 
 export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps) {
+  const { isAuthenticated } = useAuth();
   const [groupState, setGroupState] = useState<Record<string, boolean>>(loadCollapsedGroups);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     saveCollapsedGroups(groupState);
@@ -86,97 +92,122 @@ export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps
   const isGroupOpen = (key: string) => !groupState[key]; // default open
 
   return (
-    <aside
-      className={cn(
-        'flex flex-col h-full bg-slate-950 border-r border-slate-800 overflow-y-auto transition-[width] duration-200',
-        collapsed ? 'w-[var(--sidebar-width-collapsed)]' : 'w-[var(--sidebar-width)]',
-        className
-      )}
-    >
-      {/* ── Header ──────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 h-14 shrink-0 border-b border-slate-800">
-        <button
-          onClick={onToggleCollapse}
-          className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm shrink-0 hover:bg-blue-500 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          E
-        </button>
-        {!collapsed && (
-          <span className="font-semibold text-white text-sm truncate">
-            ElectionTracker
-          </span>
+    <>
+      <aside
+        className={cn(
+          'flex flex-col h-full bg-slate-950 border-r border-slate-800 overflow-y-auto transition-[width] duration-200',
+          collapsed ? 'w-[var(--sidebar-width-collapsed)]' : 'w-[var(--sidebar-width)]',
+          className
         )}
-      </div>
+      >
+        {/* ── Header ──────────────────────────────────────── */}
+        <div className="flex items-center gap-3 px-4 h-14 shrink-0 border-b border-slate-800">
+          <button
+            onClick={onToggleCollapse}
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm shrink-0 hover:bg-blue-500 transition-colors"
+            aria-label="Toggle sidebar"
+          >
+            E
+          </button>
+          {!collapsed && (
+            <span className="font-semibold text-white text-sm truncate">
+              ElectionTracker
+            </span>
+          )}
+        </div>
 
-      {/* ── Navigation ──────────────────────────────────── */}
-      <nav className="flex-1 py-3 space-y-1">
-        {/* Search link (always visible) */}
-        <SidebarNavItem
-          item={{ label: 'Search', to: '/search', icon: Search }}
-          collapsed={collapsed}
-        />
-
-        <div className="my-2 mx-3 border-t border-slate-800" />
-
-        {/* Collapsible groups */}
-        {NAV_GROUPS.map((group) => (
-          <div key={group.key}>
-            {!collapsed ? (
-              <button
-                onClick={() => toggleGroup(group.key)}
-                className="flex items-center justify-between w-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                <span>{group.label}</span>
-                {isGroupOpen(group.key) ? (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5" />
-                )}
-              </button>
-            ) : (
-              <div className="my-2 mx-3 border-t border-slate-800" />
-            )}
-
-            {(collapsed || isGroupOpen(group.key)) && (
-              <div className="space-y-0.5">
-                {group.items.map((item) => (
-                  <SidebarNavItem
-                    key={item.to}
-                    item={item}
-                    collapsed={collapsed}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Quick Access */}
-        <div className="my-2 mx-3 border-t border-slate-800" />
-        {!collapsed && (
-          <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-            Quick Access
-          </div>
-        )}
-        {QUICK_ACCESS.map((item) => (
+        {/* ── Navigation ──────────────────────────────────── */}
+        <nav className="flex-1 py-3 space-y-1">
+          {/* Search link (always visible) */}
           <SidebarNavItem
-            key={item.to}
-            item={item}
+            item={{ label: 'Search', to: '/search', icon: Search }}
             collapsed={collapsed}
           />
-        ))}
-      </nav>
 
-      {/* ── Footer ──────────────────────────────────────── */}
-      <div className="shrink-0 border-t border-slate-800 py-2 px-4">
-        {!collapsed && (
-          <p className="text-[10px] text-slate-600 py-2">
-            Election Tracker v1.0
-          </p>
-        )}
-      </div>
-    </aside>
+          <div className="my-2 mx-3 border-t border-slate-800" />
+
+          {/* Collapsible groups */}
+          {NAV_GROUPS.map((group) => (
+            <div key={group.key}>
+              {!collapsed ? (
+                <button
+                  onClick={() => toggleGroup(group.key)}
+                  className="flex items-center justify-between w-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  <span>{group.label}</span>
+                  {isGroupOpen(group.key) ? (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              ) : (
+                <div className="my-2 mx-3 border-t border-slate-800" />
+              )}
+
+              {(collapsed || isGroupOpen(group.key)) && (
+                <div className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <SidebarNavItem
+                      key={item.to}
+                      item={item}
+                      collapsed={collapsed}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Quick Access */}
+          <div className="my-2 mx-3 border-t border-slate-800" />
+          {!collapsed && (
+            <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Quick Access
+            </div>
+          )}
+          {QUICK_ACCESS.map((item) => (
+            <SidebarNavItem
+              key={item.to}
+              item={item}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
+
+        {/* ── Auth Section ─────────────────────────────────── */}
+        <div className="shrink-0 border-t border-slate-800 p-2">
+          {isAuthenticated ? (
+            <UserMenu collapsed={collapsed} />
+          ) : (
+            <button
+              onClick={() => setLoginOpen(true)}
+              className={cn(
+                'flex items-center gap-2 w-full rounded-lg text-sm font-medium transition-colors',
+                'text-slate-400 hover:bg-slate-800 hover:text-white',
+                collapsed ? 'justify-center px-0 py-2' : 'px-3 py-2'
+              )}
+              title={collapsed ? 'Sign In' : undefined}
+            >
+              <LogIn className="w-4 h-4 shrink-0" />
+              {!collapsed && <span>Sign In</span>}
+            </button>
+          )}
+        </div>
+
+        {/* ── Footer ──────────────────────────────────────── */}
+        <div className="shrink-0 border-t border-slate-800 py-2 px-4">
+          {!collapsed && (
+            <p className="text-[10px] text-slate-600 py-2">
+              Election Tracker v1.0
+            </p>
+          )}
+        </div>
+      </aside>
+
+      {/* Login Modal */}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+    </>
   );
 }
 

@@ -133,7 +133,7 @@ async function fetchFECPage(office: string, page: number): Promise<{ results: FE
     throw new Error(`FEC API error: ${response.status} ${response.statusText}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as { results: any[]; pagination: { pages: number } };
   return {
     results: data.results,
     pages: data.pagination.pages,

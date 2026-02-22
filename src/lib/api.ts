@@ -10,14 +10,43 @@ import type {
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
+// ── Auth Token Management ────────────────────────────────────
+
+let _authToken: string | null = null;
+let _onUnauthorized: (() => void) | null = null;
+
+export function setAuthToken(token: string | null) {
+  _authToken = token;
+}
+
+export function clearAuthToken() {
+  _authToken = null;
+}
+
+export function onUnauthorized(callback: () => void) {
+  _onUnauthorized = callback;
+}
+
+// ── Core Fetch ────────────────────────────────────────────────
+
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string>),
+  };
+
+  if (_authToken) {
+    headers['Authorization'] = `Bearer ${_authToken}`;
+  }
+
   const response = await fetch(url, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
+    headers,
   });
+
+  if (response.status === 401 && _onUnauthorized) {
+    _onUnauthorized();
+  }
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
@@ -94,4 +123,89 @@ export function getSpecialElections(): Promise<{ total: number; elections: Elect
 
 export function getElection(id: string): Promise<{ data: Election & { candidates: Candidate[] } }> {
   return fetchJSON(`${API_BASE}/elections/${id}`);
+}
+
+// ── Watchlist ──────────────────────────────────────────────
+
+export function getWatchlist(): Promise<{ data: Election[] }> {
+  return fetchJSON(`${API_BASE}/watchlist`);
+}
+
+export function addToWatchlist(electionId: string): Promise<{ success: boolean }> {
+  return fetchJSON(`${API_BASE}/watchlist`, {
+    method: 'POST',
+    body: JSON.stringify({ election_id: electionId }),
+  });
+}
+
+export function removeFromWatchlist(electionId: string): Promise<{ success: boolean }> {
+  return fetchJSON(`${API_BASE}/watchlist/${electionId}`, {
+    method: 'DELETE',
+  });
+}
+
+// ── Candidate Profiles ─────────────────────────────────────
+
+export function getCandidateProfile(candidateId: string): Promise<{
+  profile: any;
+  positions: any[];
+  endorsements: any[];
+} | null> {
+  return fetchJSON(`${API_BASE}/candidates/${candidateId}/profile`);
+}
+
+export function claimCandidateProfile(candidateId: string): Promise<{ profile: any }> {
+  return fetchJSON(`${API_BASE}/candidates/${candidateId}/claim`, {
+    method: 'POST',
+  });
+}
+
+export function updateProfile(data: Record<string, unknown>): Promise<{ profile: any }> {
+  return fetchJSON(`${API_BASE}/profile`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function getProfilePositions(): Promise<{ data: any[] }> {
+  return fetchJSON(`${API_BASE}/profile/positions`);
+}
+
+export function addPosition(data: { title: string; stance?: string; description: string; priority?: number }): Promise<{ position: any }> {
+  return fetchJSON(`${API_BASE}/profile/positions`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updatePosition(id: string, data: Record<string, unknown>): Promise<{ position: any }> {
+  return fetchJSON(`${API_BASE}/profile/positions/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export function deletePosition(id: string): Promise<{ success: boolean }> {
+  return fetchJSON(`${API_BASE}/profile/positions/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export function addEndorsement(data: Record<string, unknown>): Promise<{ endorsement: any }> {
+  return fetchJSON(`${API_BASE}/profile/endorsements`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteEndorsement(id: string): Promise<{ success: boolean }> {
+  return fetchJSON(`${API_BASE}/profile/endorsements/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export function togglePublishProfile(): Promise<{ is_published: boolean }> {
+  return fetchJSON(`${API_BASE}/profile/publish`, {
+    method: 'PUT',
+  });
 }

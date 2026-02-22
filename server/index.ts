@@ -6,6 +6,7 @@ import compression from 'compression';
 import { logger } from './services/logger.js';
 import { healthCheck, closePool } from './services/database.js';
 import { rateLimit } from './middleware/rateLimit.js';
+import { authRouter } from './routes/auth.js';
 import { candidatesRouter } from './routes/candidates.js';
 import { electionsRouter } from './routes/elections.js';
 import { statsRouter } from './routes/stats.js';
@@ -36,6 +37,7 @@ app.get('/health', async (_req, res) => {
 });
 
 // ── API Routes ─────────────────────────────────────────────
+app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/candidates', candidatesRouter);
 app.use('/api/v1/elections', electionsRouter);
 app.use('/api/v1/stats', statsRouter);

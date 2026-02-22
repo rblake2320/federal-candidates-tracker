@@ -15,7 +15,7 @@ const JWT_SECRET: string = envSecret || 'dev-only-insecure-fallback';
 export interface AuthPayload {
   userId: string;
   email: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: 'admin' | 'editor' | 'viewer' | 'voter' | 'candidate';
 }
 
 declare global {
