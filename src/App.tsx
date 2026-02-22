@@ -9,6 +9,13 @@ import { SearchPage } from './pages/SearchPage';
 import { ElectionsPage } from './pages/ElectionsPage';
 import { CandidatePortalPage } from './pages/CandidatePortalPage';
 import { WatchlistPage } from './pages/WatchlistPage';
+import { CongressPage } from './pages/CongressPage';
+import { CampaignPortalPage } from './pages/CampaignPortalPage';
+import { RealTimeMonitorPage } from './pages/RealTimeMonitorPage';
+import { DataStewardPage } from './pages/DataStewardPage';
+import { CivicDataApisPage } from './pages/CivicDataApisPage';
+import { CongressAdminPage } from './pages/admin/CongressAdminPage';
+import { GlobalObservatoryPage } from './pages/admin/GlobalObservatoryPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,8 +51,15 @@ export default function App() {
               <Route path="/state/:code" element={<StatePage />} />
               <Route path="/candidate/:id" element={<CandidatePage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/congress" element={<CongressPage />} />
               <Route path="/portal/candidate" element={<CandidatePortalPage />} />
+              <Route path="/portal/campaign" element={<CampaignPortalPage />} />
               <Route path="/watchlist" element={<WatchlistPage />} />
+              <Route path="/tools/realtime" element={<RealTimeMonitorPage />} />
+              <Route path="/tools/data-steward" element={<DataStewardPage />} />
+              <Route path="/tools/civic-apis" element={<CivicDataApisPage />} />
+              <Route path="/admin/congress" element={<CongressAdminPage />} />
+              <Route path="/admin/observatory" element={<GlobalObservatoryPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

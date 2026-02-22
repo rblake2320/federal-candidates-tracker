@@ -5,11 +5,18 @@ import {
   BarChart3,
   Zap,
   Bookmark,
+  Landmark,
+  Megaphone,
+  UserCheck,
+  Activity,
+  Database,
+  Code2,
+  Shield,
+  Globe,
   ChevronDown,
   ChevronRight,
   Search,
   LogIn,
-  UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +36,8 @@ interface NavGroupDef {
   key: string;
   label: string;
   items: NavItemDef[];
+  /** Only show for these roles. undefined = show for all */
+  roles?: string[];
 }
 
 // ── Nav structure ──────────────────────────────────────────
@@ -40,6 +49,33 @@ const NAV_GROUPS: NavGroupDef[] = [
     items: [
       { label: 'Elections', to: '/', icon: Vote },
       { label: 'Dashboard', to: '/dashboard', icon: BarChart3, liveIndicator: true },
+      { label: 'Congress', to: '/congress', icon: Landmark },
+    ],
+  },
+  {
+    key: 'portals',
+    label: 'Portals',
+    items: [
+      { label: 'Campaign Portal', to: '/portal/campaign', icon: Megaphone },
+      { label: 'Candidate Portal', to: '/portal/candidate', icon: UserCheck },
+    ],
+  },
+  {
+    key: 'tools',
+    label: 'Data Tools',
+    items: [
+      { label: 'Real-Time Monitor', to: '/tools/realtime', icon: Activity },
+      { label: 'Data Steward', to: '/tools/data-steward', icon: Database },
+      { label: 'Civic APIs', to: '/tools/civic-apis', icon: Code2 },
+    ],
+  },
+  {
+    key: 'admin',
+    label: 'Admin',
+    roles: ['admin'],
+    items: [
+      { label: 'Congress Admin', to: '/admin/congress', icon: Shield },
+      { label: 'Global Observatory', to: '/admin/observatory', icon: Globe },
     ],
   },
 ];
@@ -131,37 +167,44 @@ export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps
           <div className="my-2 mx-3 border-t border-slate-800" />
 
           {/* Collapsible groups */}
-          {NAV_GROUPS.map((group) => (
-            <div key={group.key}>
-              {!collapsed ? (
-                <button
-                  onClick={() => toggleGroup(group.key)}
-                  className="flex items-center justify-between w-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  <span>{group.label}</span>
-                  {isGroupOpen(group.key) ? (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              ) : (
-                <div className="my-2 mx-3 border-t border-slate-800" />
-              )}
+          {NAV_GROUPS.map((group) => {
+            // Role-gated groups
+            if (group.roles && (!isAuthenticated || !user || !group.roles.includes(user.role))) {
+              return null;
+            }
 
-              {(collapsed || isGroupOpen(group.key)) && (
-                <div className="space-y-0.5">
-                  {group.items.map((item) => (
-                    <SidebarNavItem
-                      key={item.to}
-                      item={item}
-                      collapsed={collapsed}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            return (
+              <div key={group.key}>
+                {!collapsed ? (
+                  <button
+                    onClick={() => toggleGroup(group.key)}
+                    className="flex items-center justify-between w-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <span>{group.label}</span>
+                    {isGroupOpen(group.key) ? (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                ) : (
+                  <div className="my-2 mx-3 border-t border-slate-800" />
+                )}
+
+                {(collapsed || isGroupOpen(group.key)) && (
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <SidebarNavItem
+                        key={item.to}
+                        item={item}
+                        collapsed={collapsed}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {/* Quick Access */}
           <div className="my-2 mx-3 border-t border-slate-800" />
@@ -177,22 +220,6 @@ export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps
               collapsed={collapsed}
             />
           ))}
-
-          {/* Candidate Portal (only for candidate/admin role) */}
-          {isAuthenticated && (user?.role === 'candidate' || user?.role === 'admin') && (
-            <>
-              <div className="my-2 mx-3 border-t border-slate-800" />
-              {!collapsed && (
-                <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                  Portal
-                </div>
-              )}
-              <SidebarNavItem
-                item={{ label: 'Candidate Portal', to: '/portal/candidate', icon: UserCheck }}
-                collapsed={collapsed}
-              />
-            </>
-          )}
         </nav>
 
         {/* ── Auth Section ─────────────────────────────────── */}
