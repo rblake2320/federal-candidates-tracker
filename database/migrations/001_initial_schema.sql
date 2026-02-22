@@ -70,6 +70,10 @@ CREATE INDEX idx_elections_date ON elections(election_date);
 CREATE INDEX idx_elections_type ON elections(election_type);
 CREATE INDEX idx_elections_state_office ON elections(state, office);
 CREATE UNIQUE INDEX idx_elections_unique_race ON elections(state, office, district, senate_class, election_date);
+-- Governor has NULL district + senate_class; NULLs are not equal in unique indexes,
+-- so we need a separate partial index to prevent duplicate governor elections.
+CREATE UNIQUE INDEX idx_elections_unique_governor ON elections(state, election_date)
+  WHERE office = 'governor';
 
 -- ============================================================
 -- CANDIDATES
