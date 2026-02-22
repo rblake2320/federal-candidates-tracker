@@ -41,12 +41,6 @@ const ELECTION_TYPE_OPTIONS = [
   { value: 'special', label: 'Special Elections' },
 ] as const;
 
-const GOVERNMENT_LEVELS = [
-  { value: 'federal', label: 'Federal', enabled: true, checked: true },
-  { value: 'state', label: 'State', enabled: false, checked: false },
-  { value: 'local', label: 'Local', enabled: false, checked: false },
-] as const;
-
 // ── Component ────────────────────────────────────────────────
 
 export function FilterPanel({
@@ -189,25 +183,16 @@ export function FilterPanel({
       </div>
 
       {/* ── Government Level ───────────────────────────────── */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <SectionHeader icon={Building2} label="Government Level" />
-        <div className="space-y-2">
-          {GOVERNMENT_LEVELS.map((level) => (
-            <Checkbox
-              key={level.value}
-              label={level.label}
-              checked={level.checked}
-              disabled={!level.enabled || level.value === 'federal'}
-              onChange={() => {
-                /* Federal is always on; state/local not available */
-              }}
-              muted={!level.enabled}
-            />
-          ))}
+        <div className="flex items-center gap-2">
+          <Badge variant="default" className="text-xs px-2 py-0.5">
+            Federal
+          </Badge>
+          <span className="text-xs text-slate-500">Senate &amp; House</span>
         </div>
-        {/* Explanatory note */}
-        <p className="text-[11px] text-slate-600 leading-tight">
-          Only federal races (Senate &amp; House) are currently tracked.
+        <p className="text-[11px] text-slate-500 leading-tight">
+          State &amp; local races coming soon.
         </p>
       </div>
     </div>
