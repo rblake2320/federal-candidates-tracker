@@ -80,6 +80,7 @@ export interface StateSummary {
   state_name: string;
   senate_races: number;
   house_races: number;
+  governor_races: number;
   total_candidates: number;
   democratic_candidates: number;
   republican_candidates: number;

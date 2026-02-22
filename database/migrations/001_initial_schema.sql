@@ -296,6 +296,7 @@ SELECT
   s.name AS state_name,
   COUNT(DISTINCT CASE WHEN c.office = 'senate' THEN c.election_id END) AS senate_races,
   COUNT(DISTINCT CASE WHEN c.office = 'house' THEN c.election_id END) AS house_races,
+  COUNT(DISTINCT CASE WHEN c.office = 'governor' THEN c.election_id END) AS governor_races,
   COUNT(c.id) FILTER (WHERE c.status NOT IN ('withdrawn')) AS total_candidates,
   COUNT(c.id) FILTER (WHERE c.party = 'democratic') AS democratic_candidates,
   COUNT(c.id) FILTER (WHERE c.party = 'republican') AS republican_candidates,
