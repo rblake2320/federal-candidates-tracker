@@ -1,13 +1,15 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getCandidate } from '../lib/api';
-import type { CandidateDetail, CandidateStatus } from '../types/models';
+import { getCandidate, getCandidateProfile, claimCandidateProfile } from '../lib/api';
+import type { CandidateDetail, CandidateStatus, CandidateProfileResponse } from '../types/models';
 import type { BadgeProps } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   ArrowLeft,
   DollarSign,
@@ -18,6 +20,14 @@ import {
   FileText,
   User,
   AlertCircle,
+  ShieldCheck,
+  Quote,
+  Loader2,
+  Video,
+  Twitter,
+  Facebook,
+  Instagram,
+  Youtube,
 } from 'lucide-react';
 
 // ── Constants ──────────────────────────────────────────────
@@ -61,6 +71,7 @@ const STATUS_BADGE_VARIANT: Record<CandidateStatus, string> = {
 
 export function CandidatePage() {
   const { id } = useParams<{ id: string }>();
+  const { user, isAuthenticated } = useAuth();
 
   const { data, isLoading, isError } = useQuery<{ data: CandidateDetail }>({
     queryKey: ['candidate', id],
@@ -68,10 +79,19 @@ export function CandidatePage() {
     enabled: !!id,
   });
 
+  const { data: profileData } = useQuery<CandidateProfileResponse>({
+    queryKey: ['candidate-profile', id],
+    queryFn: () => getCandidateProfile(id!),
+    enabled: !!id,
+  });
+
   if (isLoading) return <LoadingSkeleton />;
   if (isError || !data?.data) return <ErrorState />;
 
   const c = data.data;
+  const profile = profileData?.profile;
+  const profilePositions = profileData?.positions || [];
+  const profileEndorsements = profileData?.endorsements || [];
   const raceLabel =
     c.office === 'senate'
       ? `U.S. Senate \u2014 ${c.state_name}`
@@ -342,7 +362,237 @@ export function CandidatePage() {
           </CardFooter>
         )}
       </Card>
+
+      {/* ── Candidate Profile (self-managed content) ────── */}
+      {profile && (
+        <>
+          {profile.headline && (
+            <Card>
+              <CardContent className="py-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                  <span className="text-xs text-emerald-400 font-medium">Verified Candidate</span>
+                </div>
+                <p className="text-lg font-medium text-white">{profile.headline}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {profile.about && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-slate-400" />
+                  About the Candidate
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">
+                  {profile.about}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {profile.platform_summary && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-400" />
+                  Platform
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-slate-400 leading-relaxed whitespace-pre-wrap">
+                  {profile.platform_summary}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {profile.video_url && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="h-4 w-4 text-purple-400" />
+                  Campaign Video
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <a
+                  href={profile.video_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Globe className="h-4 w-4" />
+                  Watch Campaign Video
+                  <ExternalLinkIcon className="h-3.5 w-3.5" />
+                </a>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* ── Platform Positions ───────────────────────────── */}
+      {profilePositions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-amber-400" />
+              Platform Positions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profilePositions
+              .sort((a, b) => a.priority - b.priority)
+              .map((pos) => (
+                <div key={pos.id} className="border-l-2 border-blue-500/30 pl-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-medium text-white">{pos.title}</span>
+                    {pos.stance && (
+                      <Badge variant="secondary" className="text-xs">{pos.stance}</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-400">{pos.description}</p>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Endorsements ─────────────────────────────────── */}
+      {profileEndorsements.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Quote className="h-4 w-4 text-blue-400" />
+              Endorsements
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {profileEndorsements.map((end) => (
+              <div key={end.id}>
+                {end.quote && (
+                  <p className="text-sm text-slate-300 italic mb-1">"{end.quote}"</p>
+                )}
+                <p className="text-sm text-slate-500">
+                  — <span className="text-white">{end.endorser_name}</span>
+                  {end.endorser_title && `, ${end.endorser_title}`}
+                  {end.endorser_org && ` (${end.endorser_org})`}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Social Links (from profile) ──────────────────── */}
+      {profile && (profile.social_twitter || profile.social_facebook || profile.social_instagram || profile.social_youtube) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-4 w-4 text-slate-400" />
+              Social Media
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {profile.social_twitter && (
+              <SocialBadge href={profile.social_twitter} icon={<Twitter className="h-3.5 w-3.5" />} label="Twitter" />
+            )}
+            {profile.social_facebook && (
+              <SocialBadge href={profile.social_facebook} icon={<Facebook className="h-3.5 w-3.5" />} label="Facebook" />
+            )}
+            {profile.social_instagram && (
+              <SocialBadge href={profile.social_instagram} icon={<Instagram className="h-3.5 w-3.5" />} label="Instagram" />
+            )}
+            {profile.social_youtube && (
+              <SocialBadge href={profile.social_youtube} icon={<Youtube className="h-3.5 w-3.5" />} label="YouTube" />
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Claim Profile Button ─────────────────────────── */}
+      {!profile && isAuthenticated && user?.role !== 'candidate' && (
+        <ClaimProfileButton candidateId={c.id} />
+      )}
     </div>
+  );
+}
+
+// ── Profile Sub-components ─────────────────────────────────
+
+function SocialBadge({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
+    >
+      {icon}
+      {label}
+    </a>
+  );
+}
+
+function ClaimProfileButton({ candidateId }: { candidateId: string }) {
+  const [claiming, setClaiming] = useState(false);
+  const [result, setResult] = useState<'success' | 'error' | null>(null);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  async function handleClaim() {
+    setClaiming(true);
+    setResult(null);
+    try {
+      await claimCandidateProfile(candidateId);
+      setResult('success');
+    } catch (err) {
+      setResult('error');
+      setErrorMsg(err instanceof Error ? err.message : 'Claim failed');
+    } finally {
+      setClaiming(false);
+    }
+  }
+
+  if (result === 'success') {
+    return (
+      <Card className="border-emerald-500/30 bg-emerald-500/5">
+        <CardContent className="py-4 text-center">
+          <ShieldCheck className="h-6 w-6 text-emerald-400 mx-auto mb-2" />
+          <p className="text-sm text-emerald-400 font-medium">
+            Claim submitted! An admin will review and verify your identity.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="py-4 text-center">
+        <p className="text-sm text-slate-400 mb-3">
+          Are you this candidate? Claim this profile to add your platform, endorsements, and social links.
+        </p>
+        {result === 'error' && (
+          <p className="text-xs text-red-400 mb-2">{errorMsg}</p>
+        )}
+        <button
+          onClick={handleClaim}
+          disabled={claiming}
+          className={cn(
+            'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium',
+            'bg-blue-600 text-white hover:bg-blue-500 transition-colors',
+            'disabled:opacity-50 disabled:cursor-not-allowed'
+          )}
+        >
+          {claiming ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+          Claim This Profile
+        </button>
+      </CardContent>
+    </Card>
   );
 }
 

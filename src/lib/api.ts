@@ -6,6 +6,10 @@ import type {
   CandidateDetail,
   Election,
   PaginatedResponse,
+  CandidateProfile,
+  CandidatePosition,
+  CandidateEndorsement,
+  CandidateProfileResponse,
 } from '../types/models';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
@@ -146,39 +150,39 @@ export function removeFromWatchlist(electionId: string): Promise<{ success: bool
 
 // ── Candidate Profiles ─────────────────────────────────────
 
-export function getCandidateProfile(candidateId: string): Promise<{
-  profile: any;
-  positions: any[];
-  endorsements: any[];
-} | null> {
+export function getMyProfile(): Promise<CandidateProfileResponse> {
+  return fetchJSON(`${API_BASE}/profile`);
+}
+
+export function getCandidateProfile(candidateId: string): Promise<CandidateProfileResponse> {
   return fetchJSON(`${API_BASE}/candidates/${candidateId}/profile`);
 }
 
-export function claimCandidateProfile(candidateId: string): Promise<{ profile: any }> {
+export function claimCandidateProfile(candidateId: string): Promise<{ profile: CandidateProfile }> {
   return fetchJSON(`${API_BASE}/candidates/${candidateId}/claim`, {
     method: 'POST',
   });
 }
 
-export function updateProfile(data: Record<string, unknown>): Promise<{ profile: any }> {
+export function updateProfile(data: Record<string, unknown>): Promise<{ profile: CandidateProfile }> {
   return fetchJSON(`${API_BASE}/profile`, {
     method: 'PUT',
     body: JSON.stringify(data),
   });
 }
 
-export function getProfilePositions(): Promise<{ data: any[] }> {
+export function getProfilePositions(): Promise<{ data: CandidatePosition[] }> {
   return fetchJSON(`${API_BASE}/profile/positions`);
 }
 
-export function addPosition(data: { title: string; stance?: string; description: string; priority?: number }): Promise<{ position: any }> {
+export function addPosition(data: { title: string; stance?: string; description: string; priority?: number }): Promise<{ position: CandidatePosition }> {
   return fetchJSON(`${API_BASE}/profile/positions`, {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
-export function updatePosition(id: string, data: Record<string, unknown>): Promise<{ position: any }> {
+export function updatePosition(id: string, data: Record<string, unknown>): Promise<{ position: CandidatePosition }> {
   return fetchJSON(`${API_BASE}/profile/positions/${id}`, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -191,7 +195,7 @@ export function deletePosition(id: string): Promise<{ success: boolean }> {
   });
 }
 
-export function addEndorsement(data: Record<string, unknown>): Promise<{ endorsement: any }> {
+export function addEndorsement(data: Record<string, unknown>): Promise<{ endorsement: CandidateEndorsement }> {
   return fetchJSON(`${API_BASE}/profile/endorsements`, {
     method: 'POST',
     body: JSON.stringify(data),
@@ -207,5 +211,16 @@ export function deleteEndorsement(id: string): Promise<{ success: boolean }> {
 export function togglePublishProfile(): Promise<{ is_published: boolean }> {
   return fetchJSON(`${API_BASE}/profile/publish`, {
     method: 'PUT',
+  });
+}
+
+export function getAdminClaims(): Promise<{ data: (CandidateProfile & { candidate_name: string; state: string; office: string; claimant_email: string; claimant_name: string })[] }> {
+  return fetchJSON(`${API_BASE}/admin/claims`);
+}
+
+export function updateAdminClaim(id: string, status: 'approved' | 'rejected'): Promise<{ success: boolean; status: string }> {
+  return fetchJSON(`${API_BASE}/admin/claims/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ status }),
   });
 }

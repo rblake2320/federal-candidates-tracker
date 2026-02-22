@@ -108,6 +108,57 @@ export interface StateDetail {
   };
 }
 
+// ── Candidate Profile Models ──────────────────────────────
+
+export interface CandidateProfile {
+  id: string;
+  candidate_id: string;
+  user_id: string;
+  claim_status: 'pending' | 'approved' | 'rejected';
+  headline: string | null;
+  about: string | null;
+  platform_summary: string | null;
+  video_url: string | null;
+  social_twitter: string | null;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_youtube: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  is_published: boolean;
+  updated_at: string;
+  created_at: string;
+  user_display_name?: string;
+}
+
+export interface CandidatePosition {
+  id: string;
+  candidate_id: string;
+  title: string;
+  stance: string | null;
+  description: string;
+  priority: number;
+  updated_at: string;
+  created_at: string;
+}
+
+export interface CandidateEndorsement {
+  id: string;
+  candidate_id: string;
+  endorser_name: string;
+  endorser_title: string | null;
+  endorser_org: string | null;
+  quote: string | null;
+  endorsement_date: string | null;
+  created_at: string;
+}
+
+export interface CandidateProfileResponse {
+  profile: CandidateProfile | null;
+  positions: CandidatePosition[];
+  endorsements: CandidateEndorsement[];
+}
+
 // ── API Response Wrappers ──────────────────────────────────
 
 export interface Pagination {

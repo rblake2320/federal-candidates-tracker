@@ -7,6 +7,7 @@ import { StatePage } from './pages/StatePage';
 import { CandidatePage } from './pages/CandidatePage';
 import { SearchPage } from './pages/SearchPage';
 import { ElectionsPage } from './pages/ElectionsPage';
+import { CandidatePortalPage } from './pages/CandidatePortalPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="/state/:code" element={<StatePage />} />
               <Route path="/candidate/:id" element={<CandidatePage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/portal/candidate" element={<CandidatePortalPage />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

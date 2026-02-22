@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Search,
   LogIn,
+  UserCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -77,7 +78,7 @@ interface SidebarProps {
 // ── Component ──────────────────────────────────────────────
 
 export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps) {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [groupState, setGroupState] = useState<Record<string, boolean>>(loadCollapsedGroups);
   const [loginOpen, setLoginOpen] = useState(false);
 
@@ -173,6 +174,22 @@ export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps
               collapsed={collapsed}
             />
           ))}
+
+          {/* Candidate Portal (only for candidate/admin role) */}
+          {isAuthenticated && (user?.role === 'candidate' || user?.role === 'admin') && (
+            <>
+              <div className="my-2 mx-3 border-t border-slate-800" />
+              {!collapsed && (
+                <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  Portal
+                </div>
+              )}
+              <SidebarNavItem
+                item={{ label: 'Candidate Portal', to: '/portal/candidate', icon: UserCheck }}
+                collapsed={collapsed}
+              />
+            </>
+          )}
         </nav>
 
         {/* ── Auth Section ─────────────────────────────────── */}
