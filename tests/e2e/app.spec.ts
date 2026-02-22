@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Dashboard', () => {
   test('should load the dashboard page', async ({ page }) => {
     await page.goto('/');
-    await expect(page).toHaveTitle(/Federal Candidates Tracker/);
+    await expect(page).toHaveTitle(/Election Tracker/);
   });
 
   test('should display stats grid', async ({ page }) => {

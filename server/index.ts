@@ -55,7 +55,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 // ── Start Server ───────────────────────────────────────────
 const server = app.listen(PORT, () => {
-  logger.info(`🏛️  Federal Candidates Tracker API running on port ${PORT}`);
+  logger.info(`🏛️  Election Tracker API running on port ${PORT}`);
 });
 
 // Graceful shutdown

@@ -283,7 +283,7 @@ export function SearchPage() {
           </div>
           <h3 className="text-lg font-semibold text-white mb-2">Find a candidate</h3>
           <p className="text-sm text-slate-400 max-w-md">
-            Enter a search term or select filters above to find federal candidates.
+            Enter a search term or select filters above to find candidates.
           </p>
         </div>
       ) : isLoading ? (

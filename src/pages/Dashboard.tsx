@@ -76,12 +76,12 @@ export function Dashboard() {
           2026 Midterm Elections
         </h2>
         <p className="mt-2 text-lg text-slate-400">
-          Every federal candidate. Every state. Every district.
+          Every candidate. Every race. Every state.
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard
           label="Total Candidates"
           value={stats?.total_candidates ?? '—'}
@@ -121,6 +121,14 @@ export function Dashboard() {
           error={statsError}
           icon={Zap}
           iconColor="text-amber-400"
+        />
+        <StatCard
+          label="States Covered"
+          value={stats ? (stats.total_senate_races + stats.total_house_races + stats.total_governor_races > 0 ? '51' : '—') : '—'}
+          loading={statsLoading}
+          error={statsError}
+          icon={MapPin}
+          iconColor="text-cyan-400"
         />
       </div>
 

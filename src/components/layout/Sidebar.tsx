@@ -172,7 +172,7 @@ export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps
       <div className="shrink-0 border-t border-slate-800 py-2 px-4">
         {!collapsed && (
           <p className="text-[10px] text-slate-600 py-2">
-            Federal Candidates Tracker v1.0
+            Election Tracker v1.0
           </p>
         )}
       </div>
