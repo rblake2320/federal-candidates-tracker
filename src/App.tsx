@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
+import { AnalyticsProvider } from './contexts/AnalyticsContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { Dashboard } from './pages/Dashboard';
 import { StatePage } from './pages/StatePage';
@@ -14,6 +15,7 @@ import { CampaignPortalPage } from './pages/CampaignPortalPage';
 import { RealTimeMonitorPage } from './pages/RealTimeMonitorPage';
 import { DataStewardPage } from './pages/DataStewardPage';
 import { CivicDataApisPage } from './pages/CivicDataApisPage';
+import { LoginPage } from './pages/LoginPage';
 import { CongressAdminPage } from './pages/admin/CongressAdminPage';
 import { GlobalObservatoryPage } from './pages/admin/GlobalObservatoryPage';
 
@@ -44,6 +46,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
+          <AnalyticsProvider>
           <Routes>
             <Route element={<AppLayout />}>
               <Route path="/" element={<ElectionsPage />} />
@@ -51,6 +54,7 @@ export default function App() {
               <Route path="/state/:code" element={<StatePage />} />
               <Route path="/candidate/:id" element={<CandidatePage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/congress" element={<CongressPage />} />
               <Route path="/portal/candidate" element={<CandidatePortalPage />} />
               <Route path="/portal/campaign" element={<CampaignPortalPage />} />
@@ -63,6 +67,7 @@ export default function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
+          </AnalyticsProvider>
         </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>

@@ -327,7 +327,8 @@ function Checkbox({
   return (
     <label
       className={cn(
-        'flex items-center gap-2.5 cursor-pointer select-none group',
+        'flex items-center gap-2.5 py-1 px-1 -mx-1 rounded-md cursor-pointer select-none group',
+        !disabled && 'hover:bg-slate-800/50',
         disabled && 'cursor-not-allowed'
       )}
     >
@@ -337,10 +338,10 @@ function Checkbox({
         onChange={onChange}
         disabled={disabled}
         className={cn(
-          'h-4 w-4 rounded border border-slate-600 bg-slate-800 accent-blue-500',
+          'h-4 w-4 rounded border border-slate-600 bg-slate-800 accent-blue-500 shrink-0',
           'focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:ring-offset-slate-900',
           'disabled:opacity-40 disabled:cursor-not-allowed',
-          'transition-colors'
+          'transition-colors cursor-pointer'
         )}
       />
       <span

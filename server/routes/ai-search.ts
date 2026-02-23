@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../services/database.js';
 import { logger } from '../services/logger.js';
+import { logEvent } from '../services/analytics.js';
 
 export const aiSearchRouter = Router();
 
@@ -42,6 +43,19 @@ aiSearchRouter.get('/', async (req: Request, res: Response) => {
        LIMIT $3`,
       [q, `%${q}%`, limit]
     );
+
+    logEvent({
+      session_id: (req.headers['x-session-id'] as string) || crypto.randomUUID(),
+      user_id: req.user?.userId,
+      event_type: 'search',
+      event_name: 'search_submit',
+      properties: {
+        query: q,
+        result_count: candidatesResult.rows.length + electionsResult.rows.length,
+      },
+      cf_country: req.headers['cf-ipcountry'] as string,
+      cf_region: req.headers['cf-region'] as string,
+    });
 
     res.json({
       query: q,

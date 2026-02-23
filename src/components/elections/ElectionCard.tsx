@@ -212,8 +212,10 @@ export function ElectionCard({
 
         {/* Action row */}
         <div className="mt-5 flex items-center border-t border-slate-800 pt-4">
-          <span className="text-xs text-slate-500">
-            {totalCandidates} candidate{totalCandidates !== 1 ? 's' : ''}
+          <span className={cn('text-xs', totalCandidates === 0 ? 'text-amber-500/70' : 'text-slate-500')}>
+            {totalCandidates === 0
+              ? 'No candidates yet'
+              : `${totalCandidates} candidate${totalCandidates !== 1 ? 's' : ''}`}
           </span>
           <div className="flex-1" />
           <div className="flex items-center gap-2">

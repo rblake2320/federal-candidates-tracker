@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, LayoutGrid, List, Users, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -71,6 +71,16 @@ export function SearchPage() {
   const [inputValue, setInputValue] = useState(searchParams.get('q') || '');
 
   const q = searchParams.get('q') || '';
+
+  // Sync input when URL query changes externally (e.g. from navbar search)
+  useEffect(() => {
+    const urlQ = searchParams.get('q') || '';
+    if (urlQ !== inputValue) {
+      setInputValue(urlQ);
+    }
+    // Only react to searchParams changes, not inputValue
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const party = searchParams.get('party') || '';
   const office = searchParams.get('office') || '';
   const state = searchParams.get('state') || '';

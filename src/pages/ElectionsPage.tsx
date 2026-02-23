@@ -24,6 +24,7 @@ import { VoterInfoLookup } from '@/components/widgets/VoterInfoLookup';
 import { AiSearchWidget } from '@/components/widgets/AiSearchWidget';
 import { LocalElectionSearch } from '@/components/widgets/LocalElectionSearch';
 import { FindMissingElections } from '@/components/widgets/FindMissingElections';
+import { cn } from '@/lib/utils';
 import type { Election, Candidate, PaginatedResponse } from '@/types/models';
 
 // ── Constants ──────────────────────────────────────────────
@@ -549,9 +550,11 @@ export function ElectionsPage() {
                   </div>
 
                   <div className="flex items-center justify-center gap-1 w-24">
-                    <Users className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-sm text-slate-300 tabular-nums">
-                      {election.total_candidates ?? election.candidate_count ?? 0}
+                    <Users className={cn('w-3.5 h-3.5', (election.total_candidates ?? election.candidate_count ?? 0) === 0 ? 'text-amber-500/60' : 'text-slate-500')} />
+                    <span className={cn('text-sm tabular-nums', (election.total_candidates ?? election.candidate_count ?? 0) === 0 ? 'text-amber-500/70' : 'text-slate-300')}>
+                      {(election.total_candidates ?? election.candidate_count ?? 0) === 0
+                        ? '--'
+                        : (election.total_candidates ?? election.candidate_count ?? 0)}
                     </span>
                   </div>
 

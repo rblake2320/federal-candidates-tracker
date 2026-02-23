@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { query } from '../services/database.js';
 import { logger } from '../services/logger.js';
 import { requireAuth } from '../middleware/auth.js';
+import { logEvent } from '../services/analytics.js';
 
 export const watchlistRouter = Router();
 
@@ -55,6 +56,16 @@ watchlistRouter.post('/', requireAuth, async (req: Request, res: Response) => {
       [req.user!.userId, election_id]
     );
 
+    logEvent({
+      session_id: (req.headers['x-session-id'] as string) || crypto.randomUUID(),
+      user_id: req.user!.userId,
+      event_type: 'engagement',
+      event_name: 'watchlist_add',
+      properties: { election_id },
+      cf_country: req.headers['cf-ipcountry'] as string,
+      cf_region: req.headers['cf-region'] as string,
+    });
+
     res.status(201).json({ success: true });
   } catch (error) {
     logger.error('Error adding to watchlist:', error);
@@ -78,6 +89,16 @@ watchlistRouter.delete('/:electionId', requireAuth, async (req: Request, res: Re
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Election not in watchlist' });
     }
+
+    logEvent({
+      session_id: (req.headers['x-session-id'] as string) || crypto.randomUUID(),
+      user_id: req.user!.userId,
+      event_type: 'engagement',
+      event_name: 'watchlist_remove',
+      properties: { election_id: req.params.electionId },
+      cf_country: req.headers['cf-ipcountry'] as string,
+      cf_region: req.headers['cf-region'] as string,
+    });
 
     res.json({ success: true });
   } catch (error) {

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   User,
+  UserCheck,
   FileText,
   Award,
   Eye,
@@ -40,7 +41,6 @@ const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
 
 export function CandidatePortalPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [positions, setPositions] = useState<CandidatePosition[]>([]);
@@ -52,7 +52,7 @@ export function CandidatePortalPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      navigate('/');
+      setLoading(false);
       return;
     }
     if (user.role !== 'candidate' && user.role !== 'admin') {
@@ -80,7 +80,7 @@ export function CandidatePortalPage() {
     }
 
     loadProfile();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading]);
 
   async function handleTogglePublish() {
     setPublishing(true);
@@ -95,6 +95,30 @@ export function CandidatePortalPage() {
   }
 
   if (authLoading || loading) return <LoadingSkeleton />;
+
+  // Unauthenticated users see a sign-in prompt instead of redirecting
+  if (!user) {
+    return (
+      <div className="max-w-3xl mx-auto">
+        <Card className="border-slate-700">
+          <CardContent className="py-12 text-center">
+            <UserCheck className="h-10 w-10 text-blue-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-white mb-2">Candidate Portal</h2>
+            <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
+              Manage your public candidate profile, policy positions, and endorsements.
+              Sign in with a candidate account to access this portal.
+            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors"
+            >
+              Sign In to Access
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (error) {
     return (

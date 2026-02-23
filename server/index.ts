@@ -16,6 +16,8 @@ import { exportRouter } from './routes/export.js';
 import { watchlistRouter } from './routes/watchlist.js';
 import { voterInfoRouter } from './routes/voter-info.js';
 import { aiSearchRouter } from './routes/ai-search.js';
+import { analyticsRouter } from './routes/analytics.js';
+import { requestLoggerMiddleware } from './middleware/requestLogger.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -47,6 +49,7 @@ app.use(cors({
 app.use(compression());
 app.use(express.json({ limit: '1mb' }));
 app.use(rateLimit({ windowMs: 60 * 60 * 1000, max: 500 }));
+app.use(requestLoggerMiddleware);
 
 // ── Health Check ───────────────────────────────────────────
 app.get('/health', async (_req, res) => {
@@ -69,6 +72,7 @@ app.use('/api/v1/data/export', exportRouter);
 app.use('/api/v1/watchlist', watchlistRouter);
 app.use('/api/v1/voter-info', voterInfoRouter);
 app.use('/api/v1/search/ai', aiSearchRouter);
+app.use('/api/v1/analytics', analyticsRouter);
 
 // ── 404 Handler ────────────────────────────────────────────
 app.use((_req, res) => {
