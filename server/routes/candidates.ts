@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../services/database.js';
 import { logger } from '../services/logger.js';
+import { logEvent } from '../services/analytics.js';
 
 export const candidatesRouter = Router();
 
@@ -260,7 +261,18 @@ candidatesRouter.get('/:id', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Candidate not found' });
     }
 
-    res.json({ data: result.rows[0] });
+    const candidate = result.rows[0];
+    logEvent({
+      session_id: (req.headers['x-session-id'] as string) || crypto.randomUUID(),
+      user_id: req.user?.userId,
+      event_type: 'engagement',
+      event_name: 'candidate_view',
+      properties: { candidate_id: candidate.id, state: candidate.state, office: candidate.office },
+      cf_country: req.headers['cf-ipcountry'] as string,
+      cf_region: req.headers['cf-region'] as string,
+    });
+
+    res.json({ data: candidate });
   } catch (error) {
     logger.error('Error fetching candidate:', error);
     res.status(500).json({ error: 'Failed to fetch candidate' });

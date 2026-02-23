@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getCandidate, getCandidateProfile, claimCandidateProfile } from '../lib/api';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
 import type { CandidateDetail, CandidateStatus, CandidateProfileResponse } from '../types/models';
 import type { BadgeProps } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -72,6 +73,7 @@ const STATUS_BADGE_VARIANT: Record<CandidateStatus, string> = {
 export function CandidatePage() {
   const { id } = useParams<{ id: string }>();
   const { user, isAuthenticated } = useAuth();
+  const { trackClick } = useAnalytics();
 
   const { data, isLoading, isError } = useQuery<{ data: CandidateDetail }>({
     queryKey: ['candidate', id],
@@ -265,6 +267,7 @@ export function CandidatePage() {
                   icon={<Globe className="h-4 w-4" />}
                   label="Campaign Website"
                   href={c.website}
+                  onClick={() => trackClick('website_click', { candidate_id: c.id, link_type: 'website' })}
                 />
               )}
               {c.ballotpedia_url && (
@@ -274,6 +277,7 @@ export function CandidatePage() {
                     icon={<FileText className="h-4 w-4" />}
                     label="Ballotpedia"
                     href={c.ballotpedia_url}
+                    onClick={() => trackClick('website_click', { candidate_id: c.id, link_type: 'ballotpedia' })}
                   />
                 </>
               )}
@@ -499,16 +503,16 @@ export function CandidatePage() {
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {profile.social_twitter && (
-              <SocialBadge href={profile.social_twitter} icon={<Twitter className="h-3.5 w-3.5" />} label="Twitter" />
+              <SocialBadge href={profile.social_twitter} icon={<Twitter className="h-3.5 w-3.5" />} label="Twitter" onClick={() => trackClick('social_link', { candidate_id: c.id, link_type: 'twitter' })} />
             )}
             {profile.social_facebook && (
-              <SocialBadge href={profile.social_facebook} icon={<Facebook className="h-3.5 w-3.5" />} label="Facebook" />
+              <SocialBadge href={profile.social_facebook} icon={<Facebook className="h-3.5 w-3.5" />} label="Facebook" onClick={() => trackClick('social_link', { candidate_id: c.id, link_type: 'facebook' })} />
             )}
             {profile.social_instagram && (
-              <SocialBadge href={profile.social_instagram} icon={<Instagram className="h-3.5 w-3.5" />} label="Instagram" />
+              <SocialBadge href={profile.social_instagram} icon={<Instagram className="h-3.5 w-3.5" />} label="Instagram" onClick={() => trackClick('social_link', { candidate_id: c.id, link_type: 'instagram' })} />
             )}
             {profile.social_youtube && (
-              <SocialBadge href={profile.social_youtube} icon={<Youtube className="h-3.5 w-3.5" />} label="YouTube" />
+              <SocialBadge href={profile.social_youtube} icon={<Youtube className="h-3.5 w-3.5" />} label="YouTube" onClick={() => trackClick('social_link', { candidate_id: c.id, link_type: 'youtube' })} />
             )}
           </CardContent>
         </Card>
@@ -524,12 +528,13 @@ export function CandidatePage() {
 
 // ── Profile Sub-components ─────────────────────────────────
 
-function SocialBadge({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+function SocialBadge({ href, icon, label, onClick }: { href: string; icon: React.ReactNode; label: string; onClick?: () => void }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={onClick}
       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
     >
       {icon}
@@ -631,16 +636,19 @@ function CandidateLink({
   icon,
   label,
   href,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   href: string;
+  onClick?: () => void;
 }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={onClick}
       className="flex items-center gap-3 text-sm text-blue-400 hover:text-blue-300 transition-colors group py-1"
     >
       <span className="text-slate-500 group-hover:text-blue-400 transition-colors">
