@@ -96,6 +96,7 @@ statsRouter.get('/', async (req: Request, res: Response) => {
     // Build office map
     const senateRow = officeBreakdown.rows.find(r => r.office === 'senate');
     const houseRow = officeBreakdown.rows.find(r => r.office === 'house');
+    const governorRow = officeBreakdown.rows.find(r => r.office === 'governor');
 
     const stats = {
       total_candidates: parseInt(candidateStats.rows[0].total, 10),
@@ -103,9 +104,11 @@ statsRouter.get('/', async (req: Request, res: Response) => {
       total_challengers: parseInt(candidateStats.rows[0].challengers, 10),
       total_senate_races: parseInt(senateRow?.race_count || '0', 10),
       total_house_races: parseInt(houseRow?.race_count || '0', 10),
+      total_governor_races: parseInt(governorRow?.race_count || '0', 10),
       total_special_elections: parseInt(specialElections.rows[0].count, 10),
       senate_candidates: parseInt(senateRow?.candidate_count || '0', 10),
       house_candidates: parseInt(houseRow?.candidate_count || '0', 10),
+      governor_candidates: parseInt(governorRow?.candidate_count || '0', 10),
       candidates_by_party: candidatesByParty,
       avg_data_confidence: parseFloat(confidenceStats.rows[0].avg_confidence) || 0,
       high_confidence_count: parseInt(confidenceStats.rows[0].high_confidence, 10),

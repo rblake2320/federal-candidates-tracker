@@ -2,13 +2,22 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getStateDetail } from '../lib/api';
 import type { StateDetail, Candidate } from '../types/models';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { ArrowLeft, Users, MapPin, Building2, Home, Landmark } from 'lucide-react';
 
-const PARTY_COLORS: Record<string, string> = {
-  democratic: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
-  republican: 'text-red-400 bg-red-500/10 border-red-500/30',
-  libertarian: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30',
-  green: 'text-green-400 bg-green-500/10 border-green-500/30',
-  independent: 'text-purple-400 bg-purple-500/10 border-purple-500/30',
+const PARTY_BADGE_VARIANT: Record<string, 'democratic' | 'republican' | 'libertarian' | 'green' | 'independent' | 'other'> = {
+  democratic: 'democratic',
+  republican: 'republican',
+  libertarian: 'libertarian',
+  green: 'green',
+  independent: 'independent',
+  constitution: 'other',
+  no_party: 'other',
+  other: 'other',
 };
 
 const PARTY_LABELS: Record<string, string> = {
@@ -45,149 +54,261 @@ export function StatePage() {
     candidatesByElection.set(c.election_id, list);
   }
 
+  const senateElections = elections.filter(e => e.office === 'senate');
+  const governorElections = elections.filter(e => e.office === 'governor');
+  const houseElections = elections
+    .filter(e => e.office === 'house')
+    .sort((a, b) => (a.district || 0) - (b.district || 0));
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <Link to="/" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
-          ← All States
+        <Link to="/">
+          <Button variant="ghost" size="sm" className="gap-1.5 -ml-2 mb-3 text-slate-400 hover:text-white">
+            <ArrowLeft className="h-4 w-4" />
+            All States
+          </Button>
         </Link>
-        <h2 className="mt-2 text-3xl font-bold text-white">
-          {state.name}
-        </h2>
-        <p className="mt-1 text-slate-400">
-          {summary.total_races} races · {summary.total_candidates} candidates
-        </p>
+        <div className="flex items-center gap-3">
+          <MapPin className="h-7 w-7 text-blue-400 shrink-0" />
+          <div>
+            <h2 className="text-3xl font-bold text-white">
+              {state.name}
+            </h2>
+            <p className="mt-0.5 text-slate-400">
+              {summary.total_races} races &middot; {summary.total_candidates} candidates
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <MiniStat label="Total Candidates" value={summary.total_candidates} />
-        <MiniStat label="Senate Races" value={elections.filter(e => e.office === 'senate').length} />
-        <MiniStat label="House Races" value={elections.filter(e => e.office === 'house').length} />
-        <MiniStat label="House Seats" value={state.house_seats} />
+        <MiniStat icon={<Users className="h-4 w-4 text-blue-400" />} label="Total Candidates" value={summary.total_candidates} />
+        <MiniStat icon={<Building2 className="h-4 w-4 text-emerald-400" />} label="Senate Races" value={senateElections.length} />
+        <MiniStat icon={<Landmark className="h-4 w-4 text-rose-400" />} label="Governor" value={governorElections.length} />
+        <MiniStat icon={<Home className="h-4 w-4 text-amber-400" />} label="House Races" value={houseElections.length} />
       </div>
 
+      {/* Governor Race */}
+      {governorElections.length > 0 && (
+        <section>
+          <h3 className="flex items-center gap-2 text-xl font-semibold text-white mb-4">
+            <Landmark className="h-5 w-5 text-slate-400" />
+            Governor
+          </h3>
+          <div className="space-y-4">
+            {governorElections.map(election => (
+              <RaceCard
+                key={election.id}
+                title={`Governor${election.election_type === 'special' ? ' (Special)' : ''}`}
+                subtitle={election.cook_rating || 'No rating'}
+                competitive={election.is_competitive}
+                isSpecial={election.election_type === 'special'}
+                candidates={candidatesByElection.get(election.id) || []}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Senate Races */}
-      {elections.filter(e => e.office === 'senate').map(election => (
-        <RaceCard
-          key={election.id}
-          title={`U.S. Senate${election.election_type === 'special' ? ' (Special)' : ''}`}
-          subtitle={election.cook_rating || 'No rating'}
-          competitive={election.is_competitive}
-          candidates={candidatesByElection.get(election.id) || []}
-        />
-      ))}
+      {senateElections.length > 0 && (
+        <section>
+          <h3 className="flex items-center gap-2 text-xl font-semibold text-white mb-4">
+            <Building2 className="h-5 w-5 text-slate-400" />
+            U.S. Senate
+          </h3>
+          <div className="space-y-4">
+            {senateElections.map(election => (
+              <RaceCard
+                key={election.id}
+                title={`U.S. Senate${election.election_type === 'special' ? ' (Special)' : ''}`}
+                subtitle={election.cook_rating || 'No rating'}
+                competitive={election.is_competitive}
+                isSpecial={election.election_type === 'special'}
+                candidates={candidatesByElection.get(election.id) || []}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* House Races */}
-      <div>
-        <h3 className="text-xl font-semibold text-white mb-4">U.S. House</h3>
-        <div className="space-y-4">
-          {elections
-            .filter(e => e.office === 'house')
-            .sort((a, b) => (a.district || 0) - (b.district || 0))
-            .map(election => (
+      {houseElections.length > 0 && (
+        <section>
+          <h3 className="flex items-center gap-2 text-xl font-semibold text-white mb-4">
+            <Home className="h-5 w-5 text-slate-400" />
+            U.S. House
+          </h3>
+          <div className="space-y-4">
+            {houseElections.map(election => (
               <RaceCard
                 key={election.id}
                 title={`District ${election.district}`}
                 subtitle={election.cook_rating || 'No rating'}
                 competitive={election.is_competitive}
+                isSpecial={election.election_type === 'special'}
                 candidates={candidatesByElection.get(election.id) || []}
               />
             ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RaceCard({
-  title, subtitle, competitive, candidates,
-}: {
-  title: string;
-  subtitle: string;
-  competitive: boolean;
-  candidates: Candidate[];
-}) {
-  return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h4 className="text-lg font-semibold text-white">{title}</h4>
-          <span className="text-sm text-slate-500">{subtitle}</span>
-        </div>
-        {competitive && (
-          <span className="px-2 py-1 text-xs font-medium text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-full">
-            Competitive
-          </span>
-        )}
-      </div>
-
-      {candidates.length === 0 ? (
-        <p className="text-sm text-slate-500 italic">No candidates filed yet</p>
-      ) : (
-        <div className="space-y-2">
-          {candidates.map(c => (
-            <Link
-              key={c.id}
-              to={`/candidate/${c.id}`}
-              className="flex items-center justify-between rounded-lg border border-slate-800 p-3
-                         hover:border-slate-600 hover:bg-slate-800/50 transition-all group"
-            >
-              <div className="flex items-center gap-3">
-                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border ${PARTY_COLORS[c.party] || 'text-slate-400 bg-slate-500/10 border-slate-500/30'}`}>
-                  {PARTY_LABELS[c.party] || '?'}
-                </span>
-                <div>
-                  <span className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">
-                    {c.full_name}
-                  </span>
-                  {c.incumbent && (
-                    <span className="ml-2 text-xs text-slate-500">(Incumbent)</span>
-                  )}
-                </div>
-              </div>
-              {c.total_raised != null && c.total_raised > 0 && (
-                <span className="text-xs text-slate-500 tabular-nums">
-                  {formatDollars(c.total_raised)} raised
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
+          </div>
+        </section>
       )}
     </div>
   );
 }
 
-function MiniStat({ label, value }: { label: string; value: number }) {
+function RaceCard({
+  title, subtitle, competitive, isSpecial, candidates,
+}: {
+  title: string;
+  subtitle: string;
+  competitive: boolean;
+  isSpecial: boolean;
+  candidates: Candidate[];
+}) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+    <Card>
+      <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 pb-4">
+        <div className="flex flex-col gap-1">
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{subtitle}</CardDescription>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {isSpecial && (
+            <Badge variant="special">Special</Badge>
+          )}
+          {competitive && (
+            <Badge variant="special">Competitive</Badge>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        {candidates.length === 0 ? (
+          <p className="text-sm text-slate-500 italic">No candidates filed yet</p>
+        ) : (
+          <div className="space-y-2">
+            {candidates.map(c => (
+              <Link
+                key={c.id}
+                to={`/candidate/${c.id}`}
+                className={cn(
+                  'flex items-center justify-between rounded-lg border border-slate-800 p-3',
+                  'hover:border-slate-600 hover:bg-slate-800/50 transition-all group'
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant={PARTY_BADGE_VARIANT[c.party] || 'other'}
+                    className="h-8 w-8 justify-center rounded-full px-0 text-xs font-bold"
+                  >
+                    {PARTY_LABELS[c.party] || '?'}
+                  </Badge>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors">
+                      {c.full_name}
+                    </span>
+                    {c.incumbent && (
+                      <Badge variant="secondary" className="text-[11px] py-0">
+                        Incumbent
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                {c.total_raised != null && c.total_raised > 0 && (
+                  <span className="text-xs text-slate-500 tabular-nums shrink-0 ml-2">
+                    {formatDollars(c.total_raised)} raised
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MiniStat({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-2 mb-1.5">
+        {icon}
+        <span className="text-xs text-slate-400 uppercase tracking-wide">{label}</span>
+      </div>
       <div className="text-2xl font-bold text-white tabular-nums">{value.toLocaleString()}</div>
-      <div className="text-sm text-slate-400 mt-1">{label}</div>
-    </div>
+    </Card>
   );
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="h-10 w-48 animate-pulse rounded bg-slate-800" />
-      <div className="grid grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map(i => <div key={i} className="h-20 animate-pulse rounded-xl bg-slate-800/50" />)}
+    <div className="space-y-8">
+      {/* Back button skeleton */}
+      <div className="space-y-3">
+        <Skeleton className="h-8 w-28 rounded-md" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-7 w-7 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-56" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
       </div>
-      {[1, 2, 3].map(i => <div key={i} className="h-40 animate-pulse rounded-xl bg-slate-800/50" />)}
+
+      {/* Stats grid skeleton */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {[1, 2, 3, 4].map(i => (
+          <Card key={i} className="p-4">
+            <Skeleton className="h-3 w-24 mb-2" />
+            <Skeleton className="h-7 w-16" />
+          </Card>
+        ))}
+      </div>
+
+      {/* Section heading skeleton */}
+      <Skeleton className="h-6 w-32" />
+
+      {/* Race card skeletons */}
+      {[1, 2, 3].map(i => (
+        <Card key={i}>
+          <CardHeader className="pb-4">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-3.5 w-24" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {[1, 2].map(j => (
+                <div key={j} className="flex items-center gap-3 rounded-lg border border-slate-800 p-3">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <Skeleton className="h-4 w-36" />
+                  <div className="flex-1" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
 
 function ErrorState() {
   return (
-    <div className="rounded-xl border border-red-800/50 bg-red-900/20 p-8 text-center">
-      <p className="text-red-300">Failed to load state data. Please try again.</p>
-      <Link to="/" className="mt-4 inline-block text-sm text-blue-400 hover:text-blue-300">
-        ← Back to dashboard
-      </Link>
-    </div>
+    <Card className="border-red-800/50 bg-red-900/20">
+      <CardContent className="p-8 text-center">
+        <p className="text-red-300 mb-4">Failed to load state data. Please try again.</p>
+        <Link to="/">
+          <Button variant="ghost" size="sm" className="gap-1.5">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Elections
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
   );
 }

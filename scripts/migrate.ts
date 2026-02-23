@@ -48,14 +48,25 @@ async function migrate() {
     console.log(`  🔄 Applying ${file}...`);
 
     try {
-      await client.query('BEGIN');
+      // .notx.sql files cannot run inside a transaction
+      // (e.g., ALTER TYPE ... ADD VALUE is prohibited in transactions)
+      const useTransaction = !file.endsWith('.notx.sql');
+
+      if (useTransaction) await client.query('BEGIN');
       await client.query(sql);
-      await client.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
-      await client.query('COMMIT');
+      if (useTransaction) {
+        await client.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+      } else {
+        await client.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
+      }
       ran++;
       console.log(`  ✅ ${file} applied`);
     } catch (err) {
-      await client.query('ROLLBACK');
+      // Only rollback if we started a transaction
+      if (!file.endsWith('.notx.sql')) {
+        await client.query('ROLLBACK').catch(() => {});
+      }
       console.error(`  ❌ ${file} failed:`, err);
       process.exit(1);
     }

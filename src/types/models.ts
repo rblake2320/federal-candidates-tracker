@@ -1,7 +1,7 @@
 // ── Enums ──────────────────────────────────────────────────
 
-export type OfficeType = 'senate' | 'house';
-export type ElectionType = 'regular' | 'special';
+export type OfficeType = 'senate' | 'house' | 'governor';
+export type ElectionType = 'regular' | 'special' | 'primary' | 'runoff';
 export type CandidateStatus = 'declared' | 'exploratory' | 'filed' | 'qualified' | 'withdrawn' | 'won' | 'lost' | 'runoff';
 export type PartyAffiliation =
   | 'democratic' | 'republican' | 'libertarian' | 'green'
@@ -80,6 +80,7 @@ export interface StateSummary {
   state_name: string;
   senate_races: number;
   house_races: number;
+  governor_races: number;
   total_candidates: number;
   democratic_candidates: number;
   republican_candidates: number;
@@ -107,6 +108,57 @@ export interface StateDetail {
   };
 }
 
+// ── Candidate Profile Models ──────────────────────────────
+
+export interface CandidateProfile {
+  id: string;
+  candidate_id: string;
+  user_id: string;
+  claim_status: 'pending' | 'approved' | 'rejected';
+  headline: string | null;
+  about: string | null;
+  platform_summary: string | null;
+  video_url: string | null;
+  social_twitter: string | null;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_youtube: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  is_published: boolean;
+  updated_at: string;
+  created_at: string;
+  user_display_name?: string;
+}
+
+export interface CandidatePosition {
+  id: string;
+  candidate_id: string;
+  title: string;
+  stance: string | null;
+  description: string;
+  priority: number;
+  updated_at: string;
+  created_at: string;
+}
+
+export interface CandidateEndorsement {
+  id: string;
+  candidate_id: string;
+  endorser_name: string;
+  endorser_title: string | null;
+  endorser_org: string | null;
+  quote: string | null;
+  endorsement_date: string | null;
+  created_at: string;
+}
+
+export interface CandidateProfileResponse {
+  profile: CandidateProfile | null;
+  positions: CandidatePosition[];
+  endorsements: CandidateEndorsement[];
+}
+
 // ── API Response Wrappers ──────────────────────────────────
 
 export interface Pagination {
@@ -129,9 +181,11 @@ export interface Stats {
   total_challengers: number;
   total_senate_races: number;
   total_house_races: number;
+  total_governor_races: number;
   total_special_elections: number;
   senate_candidates: number;
   house_candidates: number;
+  governor_candidates: number;
   candidates_by_party: Record<string, number>;
   avg_data_confidence: number;
   high_confidence_count: number;

@@ -17,6 +17,16 @@ function sanitizeCsvValue(val: unknown): string {
   return str;
 }
 
+const VALID_OFFICE = new Set(['senate', 'house', 'governor']);
+const VALID_PARTY = new Set([
+  'democratic', 'republican', 'libertarian', 'green',
+  'constitution', 'independent', 'no_party', 'other',
+]);
+const VALID_STATUS = new Set([
+  'declared', 'exploratory', 'filed', 'qualified',
+  'withdrawn', 'won', 'lost', 'runoff',
+]);
+
 // All export endpoints require authentication
 exportRouter.use(requireAuth);
 
@@ -36,14 +46,23 @@ exportRouter.get('/', async (req: Request, res: Response) => {
       params.push(states);
     }
     if (office) {
+      if (!VALID_OFFICE.has(office as string)) {
+        return res.status(400).json({ error: 'Invalid office filter' });
+      }
       conditions.push(`c.office = $${paramIdx++}::office_type`);
       params.push(office);
     }
     if (party) {
+      if (!VALID_PARTY.has(party as string)) {
+        return res.status(400).json({ error: 'Invalid party filter' });
+      }
       conditions.push(`c.party = $${paramIdx++}::party_affiliation`);
       params.push(party);
     }
     if (status) {
+      if (!VALID_STATUS.has(status as string)) {
+        return res.status(400).json({ error: 'Invalid status filter' });
+      }
       conditions.push(`c.status = $${paramIdx++}::candidate_status`);
       params.push(status);
     }

@@ -5,6 +5,8 @@ import { logger } from '../services/logger.js';
 export const electionsRouter = Router();
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const VALID_OFFICE = new Set(['senate', 'house', 'governor']);
+const VALID_ELECTION_TYPE = new Set(['regular', 'special', 'primary', 'runoff']);
 
 // ── GET /api/v1/elections ─────────────────────────────────
 electionsRouter.get('/', async (req: Request, res: Response) => {
@@ -16,6 +18,9 @@ electionsRouter.get('/', async (req: Request, res: Response) => {
       office,
       election_type,
       competitive,
+      date_from,
+      date_to,
+      party,
       sort = 'election_date',
       order = 'asc',
     } = req.query;
@@ -38,17 +43,53 @@ electionsRouter.get('/', async (req: Request, res: Response) => {
     }
 
     if (office) {
+      if (!VALID_OFFICE.has(office as string)) {
+        return res.status(400).json({ error: `Invalid office value. Allowed: ${[...VALID_OFFICE].join(', ')}` });
+      }
       conditions.push(`e.office = $${paramIdx++}::office_type`);
       params.push(office);
     }
 
     if (election_type) {
+      if (!VALID_ELECTION_TYPE.has(election_type as string)) {
+        return res.status(400).json({ error: `Invalid election_type value. Allowed: ${[...VALID_ELECTION_TYPE].join(', ')}` });
+      }
       conditions.push(`e.election_type = $${paramIdx++}::election_type`);
       params.push(election_type);
     }
 
     if (competitive === 'true') {
       conditions.push(`e.is_competitive = TRUE`);
+    }
+
+    // Date range filters
+    if (date_from) {
+      const df = String(date_from);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(df)) {
+        return res.status(400).json({ error: 'date_from must be YYYY-MM-DD format' });
+      }
+      conditions.push(`e.election_date >= $${paramIdx++}`);
+      params.push(df);
+    }
+
+    if (date_to) {
+      const dt = String(date_to);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dt)) {
+        return res.status(400).json({ error: 'date_to must be YYYY-MM-DD format' });
+      }
+      conditions.push(`e.election_date <= $${paramIdx++}`);
+      params.push(dt);
+    }
+
+    // Party filter: elections that have at least one candidate of the specified party
+    if (party) {
+      const validParties = new Set(['democratic', 'republican', 'libertarian', 'green', 'constitution', 'independent', 'no_party', 'other']);
+      const parties = (party as string).split(',').map(p => p.trim().toLowerCase());
+      if (parties.some(p => !validParties.has(p))) {
+        return res.status(400).json({ error: `Invalid party value. Allowed: ${[...validParties].join(', ')}` });
+      }
+      conditions.push(`EXISTS (SELECT 1 FROM candidates c WHERE c.election_id = e.id AND c.party = ANY($${paramIdx++}::party_affiliation[]))`);
+      params.push(parties);
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -117,10 +158,37 @@ electionsRouter.get('/special', async (req: Request, res: Response) => {
   }
 });
 
+// ── GET /api/v1/elections/missing ──────────────────────────
+// Find states that should have elections but don't have records
+electionsRouter.get('/missing', async (_req: Request, res: Response) => {
+  try {
+    const result = await query(
+      `SELECT s.code, s.name, s.house_seats,
+              COUNT(DISTINCT CASE WHEN e.office = 'senate' THEN e.id END) as senate_elections,
+              COUNT(DISTINCT CASE WHEN e.office = 'house' THEN e.id END) as house_elections,
+              COUNT(DISTINCT CASE WHEN e.office = 'governor' THEN e.id END) as governor_elections
+       FROM states s
+       LEFT JOIN elections e ON e.state = s.code
+       GROUP BY s.code, s.name, s.house_seats
+       HAVING COUNT(DISTINCT CASE WHEN e.office = 'house' THEN e.id END) < s.house_seats
+           OR COUNT(DISTINCT CASE WHEN e.office = 'senate' THEN e.id END) = 0
+       ORDER BY s.name`
+    );
+
+    res.json({
+      data: result.rows,
+      total: result.rows.length,
+    });
+  } catch (error) {
+    logger.error('Error finding missing elections:', error);
+    res.status(500).json({ error: 'Failed to find missing elections' });
+  }
+});
+
 // ── GET /api/v1/elections/:id ─────────────────────────────
 electionsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
-    if (!UUID_RE.test(req.params.id)) {
+    if (!UUID_RE.test(String(req.params.id))) {
       return res.status(400).json({ error: 'Invalid election ID format' });
     }
 
@@ -129,7 +197,7 @@ electionsRouter.get('/:id', async (req: Request, res: Response) => {
        FROM elections e
        JOIN states s ON e.state = s.code
        WHERE e.id = $1`,
-      [req.params.id]
+      [String(req.params.id)]
     );
 
     if (result.rows.length === 0) {
@@ -143,7 +211,7 @@ electionsRouter.get('/:id', async (req: Request, res: Response) => {
        FROM candidates c
        WHERE c.election_id = $1 AND c.status != 'withdrawn'
        ORDER BY c.party ASC, c.full_name ASC`,
-      [req.params.id]
+      [String(req.params.id)]
     );
 
     res.json({

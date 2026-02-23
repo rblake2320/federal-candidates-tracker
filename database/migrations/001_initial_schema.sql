@@ -7,7 +7,7 @@
 -- ENUMS
 -- ============================================================
 
-CREATE TYPE office_type AS ENUM ('senate', 'house');
+CREATE TYPE office_type AS ENUM ('senate', 'house', 'governor');
 CREATE TYPE election_type AS ENUM ('regular', 'special');
 CREATE TYPE candidate_status AS ENUM ('declared', 'exploratory', 'filed', 'qualified', 'withdrawn', 'won', 'lost', 'runoff');
 CREATE TYPE party_affiliation AS ENUM (
@@ -54,13 +54,13 @@ CREATE TABLE elections (
 
   CONSTRAINT chk_house_district CHECK (
     (office = 'house' AND district IS NOT NULL AND district >= 0)
-    OR
-    (office = 'senate' AND district IS NULL)
+    OR (office = 'senate' AND district IS NULL)
+    OR (office = 'governor' AND district IS NULL)
   ),
   CONSTRAINT chk_senate_class CHECK (
     (office = 'senate' AND senate_class IS NOT NULL)
-    OR
-    (office = 'house' AND senate_class IS NULL)
+    OR (office = 'house' AND senate_class IS NULL)
+    OR (office = 'governor' AND senate_class IS NULL)
   )
 );
 
@@ -70,6 +70,10 @@ CREATE INDEX idx_elections_date ON elections(election_date);
 CREATE INDEX idx_elections_type ON elections(election_type);
 CREATE INDEX idx_elections_state_office ON elections(state, office);
 CREATE UNIQUE INDEX idx_elections_unique_race ON elections(state, office, district, senate_class, election_date);
+-- Governor has NULL district + senate_class; NULLs are not equal in unique indexes,
+-- so we need a separate partial index to prevent duplicate governor elections.
+CREATE UNIQUE INDEX idx_elections_unique_governor ON elections(state, election_date)
+  WHERE office = 'governor';
 
 -- ============================================================
 -- CANDIDATES
@@ -126,8 +130,8 @@ CREATE TABLE candidates (
 
   CONSTRAINT chk_cand_house_district CHECK (
     (office = 'house' AND district IS NOT NULL)
-    OR
-    (office = 'senate' AND district IS NULL)
+    OR (office = 'senate' AND district IS NULL)
+    OR (office = 'governor' AND district IS NULL)
   )
 );
 
@@ -296,6 +300,7 @@ SELECT
   s.name AS state_name,
   COUNT(DISTINCT CASE WHEN c.office = 'senate' THEN c.election_id END) AS senate_races,
   COUNT(DISTINCT CASE WHEN c.office = 'house' THEN c.election_id END) AS house_races,
+  COUNT(DISTINCT CASE WHEN c.office = 'governor' THEN c.election_id END) AS governor_races,
   COUNT(c.id) FILTER (WHERE c.status NOT IN ('withdrawn')) AS total_candidates,
   COUNT(c.id) FILTER (WHERE c.party = 'democratic') AS democratic_candidates,
   COUNT(c.id) FILTER (WHERE c.party = 'republican') AS republican_candidates,

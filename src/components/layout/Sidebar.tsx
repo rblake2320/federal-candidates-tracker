@@ -1,0 +1,301 @@
+import { useState, useEffect, useCallback } from 'react';
+import { NavLink } from 'react-router-dom';
+import {
+  Vote,
+  BarChart3,
+  Zap,
+  Bookmark,
+  Landmark,
+  Megaphone,
+  UserCheck,
+  Activity,
+  Database,
+  Code2,
+  Shield,
+  Globe,
+  ChevronDown,
+  ChevronRight,
+  Search,
+  LogIn,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { LoginModal } from '@/components/auth/LoginModal';
+import { UserMenu } from '@/components/auth/UserMenu';
+
+// ── Types ──────────────────────────────────────────────────
+
+interface NavItemDef {
+  label: string;
+  to: string;
+  icon: React.ElementType;
+  liveIndicator?: boolean;
+}
+
+interface NavGroupDef {
+  key: string;
+  label: string;
+  items: NavItemDef[];
+  /** Only show for these roles. undefined = show for all */
+  roles?: string[];
+}
+
+// ── Nav structure ──────────────────────────────────────────
+
+const NAV_GROUPS: NavGroupDef[] = [
+  {
+    key: 'explore',
+    label: 'Explore',
+    items: [
+      { label: 'Elections', to: '/', icon: Vote },
+      { label: 'Dashboard', to: '/dashboard', icon: BarChart3, liveIndicator: true },
+      { label: 'Congress', to: '/congress', icon: Landmark },
+    ],
+  },
+  {
+    key: 'portals',
+    label: 'Portals',
+    items: [
+      { label: 'Campaign Portal', to: '/portal/campaign', icon: Megaphone },
+      { label: 'Candidate Portal', to: '/portal/candidate', icon: UserCheck },
+    ],
+  },
+  {
+    key: 'tools',
+    label: 'Data Tools',
+    items: [
+      { label: 'Real-Time Monitor', to: '/tools/realtime', icon: Activity },
+      { label: 'Data Steward', to: '/tools/data-steward', icon: Database },
+      { label: 'Civic APIs', to: '/tools/civic-apis', icon: Code2 },
+    ],
+  },
+  {
+    key: 'admin',
+    label: 'Admin',
+    roles: ['admin'],
+    items: [
+      { label: 'Congress Admin', to: '/admin/congress', icon: Shield },
+      { label: 'Global Observatory', to: '/admin/observatory', icon: Globe },
+    ],
+  },
+];
+
+const QUICK_ACCESS: NavItemDef[] = [
+  { label: 'Find Candidates', to: '/search', icon: Zap },
+  { label: 'My Watchlist', to: '/watchlist', icon: Bookmark },
+];
+
+// ── Storage helpers ────────────────────────────────────────
+
+const STORAGE_KEY = 'sidebar-collapsed-groups';
+
+function loadCollapsedGroups(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCollapsedGroups(state: Record<string, boolean>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // localStorage unavailable — ignore
+  }
+}
+
+// ── Props ──────────────────────────────────────────────────
+
+interface SidebarProps {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  className?: string;
+}
+
+// ── Component ──────────────────────────────────────────────
+
+export function Sidebar({ collapsed, onToggleCollapse, className }: SidebarProps) {
+  const { user, isAuthenticated } = useAuth();
+  const [groupState, setGroupState] = useState<Record<string, boolean>>(loadCollapsedGroups);
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  useEffect(() => {
+    saveCollapsedGroups(groupState);
+  }, [groupState]);
+
+  const toggleGroup = useCallback((key: string) => {
+    setGroupState((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  const isGroupOpen = (key: string) => !groupState[key]; // default open
+
+  return (
+    <>
+      <aside
+        className={cn(
+          'flex flex-col h-full bg-slate-950 border-r border-slate-800 overflow-y-auto transition-[width] duration-200',
+          collapsed ? 'w-[var(--sidebar-width-collapsed)]' : 'w-[var(--sidebar-width)]',
+          className
+        )}
+      >
+        {/* ── Header ──────────────────────────────────────── */}
+        <div className="flex items-center gap-3 px-4 h-14 shrink-0 border-b border-slate-800">
+          <button
+            onClick={onToggleCollapse}
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm shrink-0 hover:bg-blue-500 transition-colors"
+            aria-label="Toggle sidebar"
+          >
+            E
+          </button>
+          {!collapsed && (
+            <span className="font-semibold text-white text-sm truncate">
+              ElectionTracker
+            </span>
+          )}
+        </div>
+
+        {/* ── Navigation ──────────────────────────────────── */}
+        <nav className="flex-1 py-3 space-y-1">
+          {/* Search link (always visible) */}
+          <SidebarNavItem
+            item={{ label: 'Search', to: '/search', icon: Search }}
+            collapsed={collapsed}
+          />
+
+          <div className="my-2 mx-3 border-t border-slate-800" />
+
+          {/* Collapsible groups */}
+          {NAV_GROUPS.map((group) => {
+            // Role-gated groups
+            if (group.roles && (!isAuthenticated || !user || !group.roles.includes(user.role))) {
+              return null;
+            }
+
+            return (
+              <div key={group.key}>
+                {!collapsed ? (
+                  <button
+                    onClick={() => toggleGroup(group.key)}
+                    className="flex items-center justify-between w-full px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-300 transition-colors"
+                  >
+                    <span>{group.label}</span>
+                    {isGroupOpen(group.key) ? (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                ) : (
+                  <div className="my-2 mx-3 border-t border-slate-800" />
+                )}
+
+                {(collapsed || isGroupOpen(group.key)) && (
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => (
+                      <SidebarNavItem
+                        key={item.to}
+                        item={item}
+                        collapsed={collapsed}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Quick Access */}
+          <div className="my-2 mx-3 border-t border-slate-800" />
+          {!collapsed && (
+            <div className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              Quick Access
+            </div>
+          )}
+          {QUICK_ACCESS.map((item) => (
+            <SidebarNavItem
+              key={item.to}
+              item={item}
+              collapsed={collapsed}
+            />
+          ))}
+        </nav>
+
+        {/* ── Auth Section ─────────────────────────────────── */}
+        <div className="shrink-0 border-t border-slate-800 p-2">
+          {isAuthenticated ? (
+            <UserMenu collapsed={collapsed} />
+          ) : (
+            <button
+              onClick={() => setLoginOpen(true)}
+              className={cn(
+                'flex items-center gap-2 w-full rounded-lg text-sm font-medium transition-colors',
+                'text-slate-400 hover:bg-slate-800 hover:text-white',
+                collapsed ? 'justify-center px-0 py-2' : 'px-3 py-2'
+              )}
+              title={collapsed ? 'Sign In' : undefined}
+            >
+              <LogIn className="w-4 h-4 shrink-0" />
+              {!collapsed && <span>Sign In</span>}
+            </button>
+          )}
+        </div>
+
+        {/* ── Footer ──────────────────────────────────────── */}
+        <div className="shrink-0 border-t border-slate-800 py-2 px-4">
+          {!collapsed && (
+            <p className="text-[10px] text-slate-600 py-2">
+              Election Tracker v1.0
+            </p>
+          )}
+        </div>
+      </aside>
+
+      {/* Login Modal */}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+    </>
+  );
+}
+
+// ── SidebarNavItem ─────────────────────────────────────────
+
+function SidebarNavItem({
+  item,
+  collapsed,
+}: {
+  item: NavItemDef;
+  collapsed: boolean;
+}) {
+  const Icon = item.icon;
+
+  return (
+    <NavLink
+      to={item.to}
+      end={item.to === '/'}
+      title={collapsed ? item.label : undefined}
+      className={({ isActive }) =>
+        cn(
+          'flex items-center gap-3 mx-2 rounded-md text-sm font-medium transition-colors',
+          collapsed ? 'justify-center px-0 py-2' : 'px-3 py-2',
+          isActive
+            ? 'bg-blue-600/20 text-blue-400'
+            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+        )
+      }
+    >
+      <Icon className="w-4 h-4 shrink-0" />
+      {!collapsed && (
+        <span className="truncate flex items-center gap-2">
+          {item.label}
+          {item.liveIndicator && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+          )}
+        </span>
+      )}
+    </NavLink>
+  );
+}

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { query } from '../services/database.js';
 import { logger } from '../services/logger.js';
+import { logEvent } from '../services/analytics.js';
 
 export const candidatesRouter = Router();
 
@@ -12,12 +13,12 @@ const VALID_PARTY = new Set([
   'democratic', 'republican', 'libertarian', 'green',
   'constitution', 'independent', 'no_party', 'other',
 ]);
-const VALID_OFFICE = new Set(['senate', 'house']);
+const VALID_OFFICE = new Set(['senate', 'house', 'governor']);
 const VALID_STATUS = new Set([
   'declared', 'exploratory', 'filed', 'qualified',
   'withdrawn', 'won', 'lost', 'runoff',
 ]);
-const VALID_ELECTION_TYPE = new Set(['regular', 'special']);
+const VALID_ELECTION_TYPE = new Set(['regular', 'special', 'primary', 'runoff']);
 
 // FIX: Strict allowlist map for sort columns — prevents injection via string concat
 const SORT_COLUMN_MAP: Record<string, string> = {
@@ -178,7 +179,7 @@ candidatesRouter.get('/', async (req: Request, res: Response) => {
 // ── GET /api/v1/candidates/state/:state ───────────────────
 candidatesRouter.get('/state/:state', async (req: Request, res: Response) => {
   try {
-    const state = req.params.state.toUpperCase();
+    const state = String(req.params.state).toUpperCase();
     if (!/^[A-Z]{2}$/.test(state)) {
       return res.status(400).json({ error: 'Invalid state code' });
     }
@@ -206,12 +207,12 @@ candidatesRouter.get('/state/:state', async (req: Request, res: Response) => {
 // ── GET /api/v1/candidates/district/:state/:district ──────
 candidatesRouter.get('/district/:state/:district', async (req: Request, res: Response) => {
   try {
-    const state = req.params.state.toUpperCase();
+    const state = String(req.params.state).toUpperCase();
     if (!/^[A-Z]{2}$/.test(state)) {
       return res.status(400).json({ error: 'Invalid state code' });
     }
 
-    const district = parseInt(req.params.district, 10);
+    const district = parseInt(String(req.params.district), 10);
     if (isNaN(district) || district < 0 || district > 53) {
       return res.status(400).json({ error: 'Invalid district number' });
     }
@@ -242,7 +243,7 @@ candidatesRouter.get('/district/:state/:district', async (req: Request, res: Res
 candidatesRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     // FIX: Validate UUID format before hitting Postgres
-    if (!UUID_RE.test(req.params.id)) {
+    if (!UUID_RE.test(String(req.params.id))) {
       return res.status(400).json({ error: 'Invalid candidate ID format' });
     }
 
@@ -253,14 +254,25 @@ candidatesRouter.get('/:id', async (req: Request, res: Response) => {
        JOIN states s ON c.state = s.code
        JOIN elections e ON c.election_id = e.id
        WHERE c.id = $1`,
-      [req.params.id]
+      [String(req.params.id)]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Candidate not found' });
     }
 
-    res.json({ data: result.rows[0] });
+    const candidate = result.rows[0];
+    logEvent({
+      session_id: (req.headers['x-session-id'] as string) || crypto.randomUUID(),
+      user_id: req.user?.userId,
+      event_type: 'engagement',
+      event_name: 'candidate_view',
+      properties: { candidate_id: candidate.id, state: candidate.state, office: candidate.office },
+      cf_country: req.headers['cf-ipcountry'] as string,
+      cf_region: req.headers['cf-region'] as string,
+    });
+
+    res.json({ data: candidate });
   } catch (error) {
     logger.error('Error fetching candidate:', error);
     res.status(500).json({ error: 'Failed to fetch candidate' });

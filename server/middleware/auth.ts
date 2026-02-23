@@ -15,7 +15,7 @@ const JWT_SECRET: string = envSecret || 'dev-only-insecure-fallback';
 export interface AuthPayload {
   userId: string;
   email: string;
-  role: 'admin' | 'editor' | 'viewer';
+  role: 'admin' | 'editor' | 'viewer' | 'voter' | 'candidate';
 }
 
 declare global {
@@ -64,6 +64,6 @@ export function requireRole(...roles: string[]) {
 /**
  * Generate a JWT token.
  */
-export function generateToken(payload: AuthPayload, expiresIn = '24h'): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+export function generateToken(payload: AuthPayload, expiresIn: string | number = '24h'): string {
+  return jwt.sign(payload as object, JWT_SECRET, { expiresIn } as jwt.SignOptions);
 }
