@@ -15,6 +15,7 @@ import { CampaignPortalPage } from './pages/CampaignPortalPage';
 import { RealTimeMonitorPage } from './pages/RealTimeMonitorPage';
 import { DataStewardPage } from './pages/DataStewardPage';
 import { CivicDataApisPage } from './pages/CivicDataApisPage';
+import { LoginPage } from './pages/LoginPage';
 import { CongressAdminPage } from './pages/admin/CongressAdminPage';
 import { GlobalObservatoryPage } from './pages/admin/GlobalObservatoryPage';
 
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="/state/:code" element={<StatePage />} />
               <Route path="/candidate/:id" element={<CandidatePage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/congress" element={<CongressPage />} />
               <Route path="/portal/candidate" element={<CandidatePortalPage />} />
               <Route path="/portal/campaign" element={<CampaignPortalPage />} />

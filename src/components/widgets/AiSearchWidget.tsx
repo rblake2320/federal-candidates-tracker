@@ -36,6 +36,7 @@ export function AiSearchWidget() {
           <Sparkles className="h-4 w-4 text-violet-400" />
           <span className="text-sm font-medium text-white">Smart Search</span>
         </div>
+        <p className="text-[11px] text-slate-500">Search by candidate name or state</p>
 
         <div className="relative">
           <input
@@ -43,7 +44,7 @@ export function AiSearchWidget() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search candidates, races..."
+            placeholder='e.g. "Smith" or "Texas"'
             className="w-full px-3 py-1.5 text-sm rounded-md border border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus:ring-1 focus:ring-violet-500 focus:border-violet-500 pr-8"
           />
           {isLoading && (
