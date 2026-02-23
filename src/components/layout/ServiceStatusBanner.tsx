@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Activity, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Strip /api/v1 suffix to get the server root for health checks
+const API_ROOT = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1').replace(/\/api\/v1\/?$/, '');
 
 interface HealthResponse {
   status: 'healthy' | 'degraded';
@@ -13,7 +14,7 @@ export function ServiceStatusBanner() {
   const { data, isError } = useQuery<HealthResponse>({
     queryKey: ['health'],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE}/health`);
+      const res = await fetch(`${API_ROOT}/health`);
       return res.json();
     },
     refetchInterval: 60_000, // check every minute

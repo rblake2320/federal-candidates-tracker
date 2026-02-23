@@ -33,7 +33,9 @@ const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',').map(s => s.trim());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin
+      || allowedOrigins.includes(origin)
+      || /^https:\/\/[a-z0-9-]+\.ballotwatch\.pages\.dev$/.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
